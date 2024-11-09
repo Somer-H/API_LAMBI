@@ -8,7 +8,9 @@ from datetime import datetime
 app = FastAPI()
 Base.metadata.create_all(bind=engine)
 from fastapi.middleware.cors import CORSMiddleware
+from routers.buyer import buyer_router
 
+app.include_router(buyer_router, prefix="/api", tags=["users"])
 # Añadir CORS
 origins = [
     "http://localhost",  # Ajusta según sea necesario
