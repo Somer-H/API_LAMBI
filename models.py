@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
 class SellerResponse(BaseModel):
-    iduser: Optional[int]
     name: str
     lastname: str
     e_mail: str
@@ -10,3 +9,5 @@ class SellerResponse(BaseModel):
     
 class Config:
         orm_mode = True
+class Config:
+        orm_mode = True        
