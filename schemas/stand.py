@@ -3,12 +3,12 @@ from typing import Optional
 from typing import List
 class Adress(BaseModel):
     street: str
-    no_house: Optional[str]
+    no_house: str
     colonia: str
     municipio: str
     estado: str
-    latitud: Optional[str]
-    altitud: Optional[str]
+    latitud: str
+    altitud: str
 
     class Config:
         orm_mode = True

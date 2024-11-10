@@ -6,7 +6,8 @@ class SellerResponse(BaseModel):
     lastname: str
     e_mail: str
     password: str
-    
+class Config:
+        orm_mode = True
 class StandResponse(BaseModel):
     name: str
     description: str
@@ -17,7 +18,5 @@ class StandResponse(BaseModel):
     phone: List[str]
     iduser: int
 
-class Config:
-        orm_mode = True
 class Config:
         orm_mode = True        

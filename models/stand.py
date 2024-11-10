@@ -1,8 +1,29 @@
-from sqlalchemy import Column, Integer, String, JSON, ARRAY
+from sqlalchemy import Column, Integer, String, JSON, ARRAY, TypeDecorator
+from databasecontent.database import Base
+from sqlalchemy.orm import validates
+from schemas.stand import Adress
+import types
+from sqlalchemy import Column, Integer, String, JSON, TypeDecorator
 from databasecontent.database import Base
 from sqlalchemy.orm import validates
 import json
 
+# Define el tipo personalizado para manejar "Address" como un objeto JSON en la base de datos.
+class AddressType(TypeDecorator):
+    """Tipo personalizado para manejar el tipo 'address' en la base de datos."""
+    impl = JSON  # Utilizamos el tipo JSON de la base de datos directamente
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            # Serializar el diccionario a una cadena JSON antes de insertarlo
+            return json.dumps(value)
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            # Deserializar la cadena JSON de la base de datos a un diccionario
+            return json.loads(value)
+        return value
 class Stand(Base):
     __tablename__ = "stand"
 
@@ -14,10 +35,4 @@ class Stand(Base):
     horario = Column(String, nullable=True)
     phone = Column(ARRAY(String), nullable=True)
     iduser = Column(Integer, nullable=True)
-    location = Column(ARRAY(JSON))
-
-    @validates('location')
-    def convert_location(self, key, value):
-        if isinstance(value, str):
-            return json.loads(value)  # Convierte la cadena JSON en un objeto Python
-        return value
+    location = Column(ARRAY(AddressType))
