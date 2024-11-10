@@ -6,7 +6,6 @@ from sellers.seller_models import Seller  # Importación desde sellers/user_mode
 from sqlalchemy.orm import Session
 from datetime import datetime
 app = FastAPI()
-Base.metadata.create_all(bind=engine)
 from fastapi.middleware.cors import CORSMiddleware
 from routers.buyer import buyer_router
 from routers.products import product_router
