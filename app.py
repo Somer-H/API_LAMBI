@@ -10,8 +10,10 @@ Base.metadata.create_all(bind=engine)
 from fastapi.middleware.cors import CORSMiddleware
 from routers.buyer import buyer_router
 from routers.products import product_router
+from routers.stand import stand_router
 app.include_router(buyer_router, prefix="/api", tags=["users"])
 app.include_router(product_router, prefix="/api", tags=["products"])
+app.include_router(stand_router, prefix="/api", tags=["stand"])
 # Añadir CORS
 origins = [
     "http://localhost",  # Ajusta según sea necesario
