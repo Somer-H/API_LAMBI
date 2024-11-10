@@ -9,8 +9,9 @@ app = FastAPI()
 Base.metadata.create_all(bind=engine)
 from fastapi.middleware.cors import CORSMiddleware
 from routers.buyer import buyer_router
-
+from routers.products import product_router
 app.include_router(buyer_router, prefix="/api", tags=["users"])
+app.include_router(product_router, prefix="/api", tags=["products"])
 # Añadir CORS
 origins = [
     "http://localhost",  # Ajusta según sea necesario
