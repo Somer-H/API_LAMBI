@@ -68,16 +68,14 @@ async def login_buyer(buyer: BuyerLogin, db: Session = Depends(get_db)):
     if not db_buyer:
         raise HTTPException(status_code=404, detail="Email not found")
     
-    
     if not bcrypt.checkpw(buyer.password.encode('utf-8'), db_buyer.password.encode('utf-8')):
         raise HTTPException(status_code=401, detail="Incorrect password")
     
     expiration = datetime.utcnow() + timedelta(hours=1)
     token = jwt.encode({"idbuyer": db_buyer.iduser, "exp": expiration}, SECRET_KEY, algorithm=ALGORITHM)
 
-    response = JSONResponse(content={"idbuyer": db_buyer.iduser, "name": db_buyer.name})
+    response = JSONResponse(content={"idbuyer": db_buyer.iduser, "name": db_buyer.name}, status_code=200)
     response.headers["Authorization"] = f"Bearer {token}"
-
     return response
 
 

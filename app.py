@@ -13,25 +13,29 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers.buyer import buyer_router
 from routers.products import product_router
 from routers.stand import stand_router
-app.include_router(buyer_router, prefix="/api", tags=["users"])
-app.include_router(product_router, prefix="/api", tags=["products"])
-app.include_router(stand_router, prefix="/api", tags=["stand"])
-# Añadir CORS
+
 origins = [
-    "http://localhost",  # Ajusta según sea necesario
+    "http://localhost",
     "http://localhost:8000",
-    "http://52.72.44.45:8000/"
+    "http://localhost:4200",
+    "http://52.72.44.45:8000"
 ]
 SECRET_KEY = "LAPUERTADELAMBI"
 ALGORITHM = "HS256"
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Authorization"] 
 )
+
+app.include_router(buyer_router, prefix="/api", tags=["users"])
+app.include_router(product_router, prefix="/api", tags=["products"])
+app.include_router(stand_router, prefix="/api", tags=["stand"])
+# Añadir CORS
 
 @app.get('/')
 def index():
@@ -122,7 +126,7 @@ async def login_seller(seller: SellerLogin, db: Session = Depends(get_db)):
     expiration = datetime.utcnow() + timedelta(hours=1)
     token = jwt.encode({"idseller": db_seller.iduser, "exp": expiration}, SECRET_KEY, algorithm=ALGORITHM)
 
-    response = JSONResponse(content={"idseller": db_seller.iduser, "name": db_seller.name})
+    response = JSONResponse(content={"idseller": db_seller.iduser, "name": db_seller.name}, status_code=200)
     response.headers["Authorization"] = f"Bearer {token}"
 
     return response
