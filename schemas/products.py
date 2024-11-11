@@ -8,7 +8,7 @@ class ProductBase(BaseModel):
     amount: float
     category: Optional[str]
     image: Optional[str]
-    sellerid: int
+    standid: int
     
     class Config:
         orm_mode = True

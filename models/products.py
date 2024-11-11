@@ -11,4 +11,4 @@ class Product(Base):
     amount = Column(Float, nullable=True)
     category = Column(String, nullable=True)
     image = Column(String, nullable=True)
-    sellerid = Column(Integer, nullable=False)
+    standid = Column(Integer, nullable=False)

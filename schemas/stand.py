@@ -1,7 +1,11 @@
 from pydantic import BaseModel
 from typing import Optional
 from typing import List
-class Adress(BaseModel):
+class StandBase(BaseModel):
+    name: str
+    description: str
+    image: Optional[str]
+    category: str
     street: str
     no_house: str
     colonia: str
@@ -9,26 +13,15 @@ class Adress(BaseModel):
     estado: str
     latitud: str
     altitud: str
-
-    class Config:
-        orm_mode = True
-
-class StandBase(BaseModel):
-    name: str
-    description: str
-    image: Optional[str]
-    category: str
-    location: List[Adress]
     horario: str
     phone: List[str]
-    iduser: int
-
+    idseller: int
     class Config:
         orm_mode = True
 
 class StandCreate(StandBase):
     pass
 class StandResponse(StandBase):
-    iduser: int
+    idstand: int
     class Config:
         orm_mode = True

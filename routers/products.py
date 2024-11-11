@@ -50,15 +50,7 @@ async def get_products(db: Session = Depends(get_db)):
 @product_router.post("/products/", response_model=Product)
 async def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     try:
-        new_product = ProductModel(
-            name=product.name,
-            description = product.description,
-            price=product.price,
-            amount=product.amount,
-            category=product.category,
-            image=product.image, 
-            sellerid=product.sellerid      
-        )
+        new_product = ProductModel(**product.dict())
         db.add(new_product)
         db.commit()
         db.refresh(new_product)

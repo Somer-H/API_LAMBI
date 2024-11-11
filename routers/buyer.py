@@ -19,7 +19,6 @@ async def register_buyer(buyer: BuyerCreate, db: Session = Depends(get_db)):
         if db_buyer:
             raise HTTPException(status_code=400, detail="Email already registered")
         hashed_password = bcrypt.hashpw(buyer.password.encode('utf-8'), bcrypt.gensalt())
-        
         new_buyer = BuyerModel(
             name=buyer.name,
             lastname=buyer.lastname,
