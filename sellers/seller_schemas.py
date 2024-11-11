@@ -22,7 +22,14 @@ class SellerUpdate(BaseModel):
     lastname: Optional[str] = None
     e_mail: Optional[str] = None
     password: Optional[str] = None
+
+class SellerLogin(BaseModel):
+    e_mail: str
+    password: str
 class SellerUpdateRequest(SellerUpdate):
     pass
     class Config:
         orm_mode = True
+class SellerLoginResponse(BaseModel):
+    idseller: int
+    name: str

@@ -1,10 +1,13 @@
 from fastapi import FastAPI, Depends, status, HTTPException
 from typing import List
+from fastapi.responses import JSONResponse
 from databasecontent.database import engine, get_db, Base
-from sellers.seller_schemas import SellerRequest, SellerResponse, SellerUpdateRequest, SellerUpdate  # Importación desde sellers/user_schemas.py
+from sellers.seller_schemas import SellerRequest,SellerLogin, SellerResponse, SellerUpdateRequest, SellerUpdate  # Importación desde sellers/user_schemas.py
 from sellers.seller_models import Seller  # Importación desde sellers/user_model.py
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timedelta
+import jwt
+import bcrypt
 app = FastAPI()
 from fastapi.middleware.cors import CORSMiddleware
 from routers.buyer import buyer_router
@@ -18,6 +21,8 @@ origins = [
     "http://localhost",  # Ajusta según sea necesario
     "http://localhost:8000",
 ]
+SECRET_KEY = "LAPUERTADELAMBI"
+ALGORITHM = "HS256"
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,11 +45,24 @@ def get_all_users(db: Session = Depends(get_db)):
 
 @app.post('/sellers', status_code=status.HTTP_201_CREATED, response_model=SellerResponse)
 def create_user(post_user: SellerRequest, db: Session = Depends(get_db)):
-    new_user = Seller(**post_user.dict())
-    user = db.add(new_user)
-    db.commit()
-    db.refresh(user)
-    return user
+    try:
+        hashed_password = bcrypt.hashpw(post_user.password.encode('utf-8'), bcrypt.gensalt())
+
+        new_user = Seller(
+            name=post_user.name,
+            lastname=post_user.lastname,
+            e_mail=post_user.e_mail,
+            password=hashed_password.decode('utf-8') 
+        )
+        
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        return new_user
+
+    except Exception as e:
+        db.rollback()  
+        raise HTTPException(status_code=500, detail="Error creating seller: " + str(e))
 
 @app.get("/sellers/{iduser}", response_model=SellerResponse)
 def get_user(iduser: int, db: Session = Depends(get_db)):
@@ -89,3 +107,21 @@ def delete_user(iduser: int, db: Session = Depends(get_db)):
        return True
     else :
         return False
+
+@app.post("/loginSeller/", response_model=SellerResponse)
+async def login_seller(seller: SellerLogin, db: Session = Depends(get_db)):
+    db_seller = db.query(Seller).filter(Seller.e_mail == seller.e_mail).first()
+    if not db_seller:
+        raise HTTPException(status_code=404, detail="Email not found")
+    
+    
+    if not bcrypt.checkpw(seller.password.encode('utf-8'), db_seller.password.encode('utf-8')):
+        raise HTTPException(status_code=401, detail="Incorrect password")
+    
+    expiration = datetime.utcnow() + timedelta(hours=1)
+    token = jwt.encode({"idseller": db_seller.iduser, "exp": expiration}, SECRET_KEY, algorithm=ALGORITHM)
+
+    response = JSONResponse(content={"idseller": db_seller.iduser, "name": db_seller.name})
+    response.headers["Authorization"] = f"Bearer {token}"
+
+    return response
