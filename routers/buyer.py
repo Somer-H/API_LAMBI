@@ -42,9 +42,18 @@ async def register_buyer(buyer: BuyerCreate, db: Session = Depends(get_db)):
         print("Error durante el registro del comprador:", e) 
         raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.")
 
-@buyer_router.get("/getAllBuyers/", response_model=List[BuyerResponseGet])
+
+@buyer_router.get("/all/buyer/", response_model=List[BuyerResponseGet])
 async def get_all_buyers(db: Session = Depends(get_db)):
-    return db.query(BuyerModel).all()
+    db_buyers = db.query(BuyerModel).all()
+    if not db_buyers:
+        raise HTTPException(status_code=404, detail="No buyers found")
+    response = [
+        BuyerResponseGet(idbuyer=buyer.iduser, name=buyer.name, lastname=buyer.lastname)
+        for buyer in db_buyers
+    ]
+    
+    return response
 
 @buyer_router.get("/getUserById/{idbuyer}", response_model=Buyer)
 async def get_buyer_by_id(idbuyer: int, db: Session = Depends(get_db)):
