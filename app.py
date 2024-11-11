@@ -20,6 +20,7 @@ app.include_router(stand_router, prefix="/api", tags=["stand"])
 origins = [
     "http://localhost",  # Ajusta según sea necesario
     "http://localhost:8000",
+    "http://52.72.44.45:8000/"
 ]
 SECRET_KEY = "LAPUERTADELAMBI"
 ALGORITHM = "HS256"
