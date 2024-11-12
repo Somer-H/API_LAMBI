@@ -10,7 +10,7 @@ class Stand(Base):
     name = Column(String, nullable=True)
     description = Column(String, nullable=True)
     image = Column(String, nullable=False)
-    category = Column(String, nullable=True)
+    category = Column(Integer, nullable=True)
     horario = Column(String, nullable=True)
     phone = Column(ARRAY(String), nullable=True)
     idseller = Column(Integer, nullable=True)
