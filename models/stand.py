@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, JSON, ARRAY, TypeDecorator
+from sqlalchemy import Column, Integer, String, ARRAY,ForeignKey
 from databasecontent.database import Base
-from sqlalchemy import Column, Integer, String, JSON, TypeDecorator
+from sqlalchemy import Column, Integer, String
 from databasecontent.database import Base
 
 class Stand(Base):
@@ -13,7 +13,7 @@ class Stand(Base):
     category = Column(Integer, nullable=True)
     horario = Column(String, nullable=True)
     phone = Column(ARRAY(String), nullable=True)
-    idseller = Column(Integer, nullable=True)
+    idseller = Column(Integer, ForeignKey('Seller.iduser'), nullable=True)
     street = Column (String, nullable = True)
     no_house = Column(Integer, nullable = False)
     colonia = Column(String, nullable = True)
@@ -21,3 +21,7 @@ class Stand(Base):
     estado = Column(String, nullable = True)
     latitud = Column(String, nullable = True)
     altitud = Column(String, nullable = True)
+class CategoryModel(Base): 
+    __tablename__ = 'Category'
+    idcategory = Column(Integer, primary_key= True, nullable = True, autoincrement= True)
+    category = Column(String, nullable = True)

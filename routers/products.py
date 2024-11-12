@@ -118,9 +118,9 @@ async def get_recent_products(db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No recent products found.")
     return recent_products
 
-@product_router.get("/products/category/{category_name}", response_model=List[Product])
-async def get_products_by_category(category_name: str, db: Session = Depends(get_db)):
-    products = db.query(ProductModel).filter(ProductModel.category == category_name).all()
+@product_router.get("/products/category/{category}", response_model=List[Product])
+async def get_products_by_category(category: int, db: Session = Depends(get_db)):
+    products = db.query(ProductModel).filter(ProductModel.category == category).all()
     if not products:
         raise HTTPException(status_code=404, detail="No products found in the specified category.")
     return products

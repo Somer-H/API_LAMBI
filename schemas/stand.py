@@ -1,6 +1,33 @@
 from pydantic import BaseModel
 from typing import Optional
 from typing import List
+class CategoryBase(BaseModel): 
+    category: str
+    class Config:
+        orm_mode = True
+class Catetory(CategoryBase):
+    pass  
+class CategoryResponse(CategoryBase):
+    idcategory: int      
+class StandSellerResponse(BaseModel): 
+    idstand: int
+    stand_name: str
+    description: str
+    image: str
+    horario: str
+    phone: List[str]
+    idseller: int
+    street: str
+    no_house: str
+    colonia: str
+    municipio: str
+    estado: str
+    latitud: str
+    altitud: str
+    category: int
+    seller_name: str
+    seller_lastname: str
+
 class StandBase(BaseModel):
     name: str
     description: str
