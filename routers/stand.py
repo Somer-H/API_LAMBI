@@ -64,12 +64,3 @@ def put_stand(idstand: int, stand_update: StandUpdateRequest, db: Session = Depe
         except Exception as e:
             db.rollback()
             return stand
-@app.delete("/stands/{iduser}", status_code=status.HTTP_201_CREATED, response_model= bool)
-def delete_user(iduser: int, db: Session = Depends(get_db)):
-    seller = db.query(Seller).filter(Seller.iduser == iduser).first()
-    if seller :
-       db.delete(seller)
-       db.commit()
-       return True
-    else :
-        return False
