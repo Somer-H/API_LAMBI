@@ -13,7 +13,7 @@ class StandSellerResponse(BaseModel):
     idstand: int
     stand_name: str
     description: str
-    image: str
+    image: List[str]
     horario: str
     phone: List[str]
     idseller: int
@@ -31,7 +31,7 @@ class StandSellerResponse(BaseModel):
 class StandBase(BaseModel):
     name: str
     description: str
-    image: Optional[str]
+    image: Optional[List[str]]
     category: int
     street: str
     no_house: str
@@ -48,7 +48,7 @@ class StandBase(BaseModel):
 class StandUpdateRequest(BaseModel):
     name: Optional[str]
     description: Optional[str]
-    image: Optional[str]
+    image: Optional[List[str]]
     category: Optional[int]
     street: Optional[str]
     no_house: Optional[str]

@@ -9,7 +9,7 @@ class Stand(Base):
     idstand = Column(Integer, primary_key=True, nullable=True, autoincrement=True)
     name = Column(String, nullable=True)
     description = Column(String, nullable=True)
-    image = Column(String, nullable=False)
+    image = Column(ARRAY(String), nullable=False)
     category = Column(Integer, nullable=True)
     horario = Column(String, nullable=True)
     phone = Column(ARRAY(String), nullable=True)
