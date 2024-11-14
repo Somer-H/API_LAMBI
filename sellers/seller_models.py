@@ -9,4 +9,3 @@ class Seller(Base):
     lastname = Column(String, nullable=True)
     e_mail = Column(String, nullable=True)
     password = Column(String, nullable=True)
-  

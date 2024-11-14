@@ -6,20 +6,19 @@ class ProductBase(BaseModel):
     description: str
     price: float
     amount: float
-    category: Optional[str]
+    category: int
     image: Optional[str]
     standid: int
     
     class Config:
         orm_mode = True
 class ProductUpdate(BaseModel):
-    name: Optional[str]
-    description: Optional[str]
-    price: Optional[float]
-    amount: Optional[float]
-    category: Optional[str]
-    image: Optional[str]
-
+    name: Optional[str] = None
+    description: Optional[str] = None 
+    price: Optional[float] = None 
+    amount: Optional[float] = None
+    category: Optional[int] = None
+    image: Optional[str] = None
 class ProductCreate(ProductBase):
     pass
 

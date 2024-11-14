@@ -29,7 +29,7 @@ def create_stand(stand: StandCreate, db: Session = Depends(get_db)):
 def get_all_stands(db: Session = Depends(get_db)):
     all_stands = db.query(StandModel).all()
     return all_stands
-@stand_router.put("/sellers/{idstand}", status_code=status.HTTP_201_CREATED, response_model=StandResponse)
+@stand_router.put("/stand/{idstand}", status_code=status.HTTP_201_CREATED, response_model=StandResponse)
 def put_stand(idstand: int, stand_update: StandUpdateRequest, db: Session = Depends(get_db)):
     stand = db.query(StandModel).filter(StandModel.idstand == idstand).first()
     if not stand:

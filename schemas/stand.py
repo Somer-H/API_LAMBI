@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from typing import List
+from fastapi import Form
 class CategoryBase(BaseModel): 
     category: str
     class Config:
@@ -27,7 +28,6 @@ class StandSellerResponse(BaseModel):
     category: int
     seller_name: str
     seller_lastname: str
-
 class StandBase(BaseModel):
     name: str
     description: str
@@ -46,18 +46,18 @@ class StandBase(BaseModel):
     class Config:
         orm_mode = True
 class StandUpdateRequest(BaseModel):
-    name: Optional[str]
-    description: Optional[str]
-    image: Optional[List[str]]
-    category: Optional[int]
-    street: Optional[str]
-    no_house: Optional[str]
-    colonia: Optional[str]
-    municipio: Optional[str]
-    estado: Optional[str]
-    latitud: Optional[str]
-    altitud: Optional[str]
-    horario: Optional[str]
+    name: Optional[str] = None
+    description: Optional[str] = None
+    image: Optional[List[str]] = None
+    category: Optional[int] = None 
+    street: Optional[str] = None 
+    no_house: Optional[str] = None
+    colonia: Optional[str] = None
+    municipio: Optional[str] = None
+    estado: Optional[str] = None 
+    latitud: Optional[str]= None 
+    altitud: Optional[str] = None
+    horario: Optional[str] = None 
 class StandCreate(StandBase):
     pass
 class StandResponse(StandBase):

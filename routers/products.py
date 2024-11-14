@@ -75,7 +75,6 @@ async def update_product(product_id: int, product: ProductUpdate, db: Session = 
     product_to_update = db.query(ProductModel).filter(ProductModel.idproduct == product_id).first()
     if not product_to_update:
         raise HTTPException(status_code=404, detail="Product not found")
-
     if product.name is not None:
         product_to_update.name = product.name
     if product.description is not None:
@@ -88,7 +87,6 @@ async def update_product(product_id: int, product: ProductUpdate, db: Session = 
         product_to_update.category = product.category
     if product.image is not None:
         product_to_update.image = product.image
-
     db.commit()
     db.refresh(product_to_update)
     return product_to_update

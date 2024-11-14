@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ARRAY,ForeignKey
+from sqlalchemy import Column, Integer, String, ARRAY,ForeignKey, Float
 from databasecontent.database import Base
 from sqlalchemy import Column, Integer, String
 from databasecontent.database import Base
@@ -19,8 +19,8 @@ class Stand(Base):
     colonia = Column(String, nullable = True)
     municipio = Column(String, nullable = True)
     estado = Column(String, nullable = True)
-    latitud = Column(String, nullable = True)
-    altitud = Column(String, nullable = True)
+    latitud = Column(Float, nullable = True)
+    altitud = Column(Float, nullable = True)
 class CategoryModel(Base): 
     __tablename__ = 'Category'
     idcategory = Column(Integer, primary_key= True, nullable = True, autoincrement= True)
