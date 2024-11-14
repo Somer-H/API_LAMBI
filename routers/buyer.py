@@ -8,8 +8,10 @@ import bcrypt
 from schemas.buyer import Buyer,BuyerUpdate, BuyerCreate,BuyerResponseGet,BuyerLogin,BuyerLoginResponse,BuyerUpdateResponse
 from models.buyer import Buyer as BuyerModel
 from databasecontent.database import engine, get_db, Base
-from schemas.favorite import FavoriteBase
+from schemas.favorite import FavoriteBase, FavoriteResponse
 from models.favorite import Favorite
+from schemas.stand import StandFavoriteResponse
+from models.stand import Stand
 buyer_router = APIRouter()
 
 SECRET_KEY = "LAPUERTADELAMBI"
@@ -106,18 +108,28 @@ async def delete_buyer(idbuyer: int, db: Session = Depends(get_db)):
     response = BuyerUpdateResponse(idbuyer=db_buyer.iduser, name=db_buyer.name, lastname=db_buyer.lastname)
     
     return response
-
-@buyer_router.post("/favorites", status_code = status.HTTP_201_OK)
-def addFavorite(favorite : FavoriteBase, db:Session = Depends(get_db)):
+@buyer_router.post("/favorites", status_code=status.HTTP_200_OK, response_model=FavoriteResponse)
+def addFavorite(favorite: FavoriteBase, db: Session = Depends(get_db)):
     try: 
         newFavorite = Favorite(**favorite.dict())
+        newFavorite.status = True
+
         db.add(newFavorite)
         db.commit()
         db.refresh(newFavorite)
-        db.commit()
+
+        print(newFavorite)  # Verificar todos los campos
         return newFavorite
-    except HTTPException as e:
-        raise e
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail="Error adding favorite: " + str(e))
+        raise HTTPException(status_code=500, detail=f"Error adding favorite: {str(e)}")
+@buyer_router.put("/change/favorite/{iduser}/{idstand}", status_code=status.HTTP_200_OK, response_model=bool)
+def delete_favorite(iduser: int, idstand: int, db: Session = Depends(get_db)):
+    favorite_search = db.query(Favorite).filter(Favorite.iduser==iduser).filter(Favorite.idstand==idstand).first()
+    if(favorite_search):
+        favorite_search.status= False
+        db.commit()
+        db.refresh(favorite_search)
+        return True
+    else: 
+        return False    

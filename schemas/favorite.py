@@ -2,8 +2,11 @@ from pydantic import BaseModel
 from typing import Optional
 
 class FavoriteBase(BaseModel):
-    idBuyer: int
-    idProduct: int
-    
+    iduser: int
+    idstand: int
+    class Config:
+        orm_mode = True
+class FavoriteResponse(FavoriteBase): 
+    status: bool        
     class Config:
         orm_mode = True

@@ -45,6 +45,26 @@ class StandBase(BaseModel):
     idseller: int
     class Config:
         orm_mode = True
+class StandFavoriteResponse(BaseModel): 
+    idstand: int
+    name: str
+    description: str
+    idseller: int
+    street: str
+    no_house: str
+    colonia: str
+    municipio: str
+    estado: str
+    image: Optional[List[str]]= None
+    category: int
+    horario: str
+    phone: List[str]
+    altitud: float
+    latitud: float
+    favorite_user: Optional[int] = None
+    favorite_status: Optional[bool] = None
+    class Config:
+        orm_mode = True
 class StandUpdateRequest(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None

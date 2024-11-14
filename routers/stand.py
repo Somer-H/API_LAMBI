@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException,status, Form
 from sqlalchemy.orm import Session
 from databasecontent.database import get_db
-from typing import List, Optional
+from typing import List
+from models.favorite import Favorite
 from models.stand import Stand as StandModel, CategoryModel
 from sellers.seller_models import Seller
-from schemas.stand import StandCreate, StandResponse,StandUpdateRequest, Catetory, CategoryResponse, StandSellerResponse
+from schemas.stand import StandResponse,StandUpdateRequest, Catetory, CategoryResponse, StandSellerResponse, StandFavoriteResponse
+from schemas.favorite import FavoriteResponse
 stand_router = APIRouter()
 @stand_router.post("/stand", status_code=status.HTTP_200_OK, response_model=StandResponse)
 def create_stand(
@@ -169,3 +171,39 @@ def get_stands(idseller:int, db: Session = Depends(get_db)):
         return standSeller
     else:
         return False    
+@stand_router.get("/favorite", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
+def get_favorites(db: Session = Depends(get_db)):
+        favorites = (
+        db.query(
+            StandModel.idstand,
+            StandModel.name,
+            StandModel.description,
+            StandModel.idseller,
+            StandModel.street,
+            StandModel.no_house,
+            StandModel.colonia,
+            StandModel.municipio,
+            StandModel.estado,
+            StandModel.image,
+            StandModel.category,
+            StandModel.horario,
+            StandModel.phone,
+            StandModel.altitud,
+            StandModel.latitud,
+            Favorite.iduser.label("favorite_user"),
+            Favorite.status.label("favorite_status"),
+        )
+        .outerjoin(Favorite, StandModel.idstand == Favorite.idstand)
+        .all()
+        )
+        if(favorites): 
+         return favorites
+        else: 
+            return False 
+@stand_router.get("/favoritebyId/{iduser}/{idstand}", status_code=status.HTTP_200_OK, response_model= FavoriteResponse | bool)
+def get_favorite_byId(iduser: int, idstand: int, db: Session= Depends(get_db())): 
+            favorite = db.query(Favorite).filter(Favorite.iduser == iduser).filter(Favorite.idstand == idstand).first()
+            if(favorite): 
+                return favorite
+            else: 
+                return False
