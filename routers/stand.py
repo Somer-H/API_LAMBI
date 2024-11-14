@@ -7,35 +7,53 @@ from sellers.seller_models import Seller
 from schemas.stand import StandCreate, StandResponse,StandUpdateRequest, Catetory, CategoryResponse, StandSellerResponse
 stand_router = APIRouter()
 @stand_router.post("/stand", status_code=status.HTTP_200_OK, response_model=StandResponse)
-def create_stand(name:str= Form(...),description: str= Form(...), image: Optional[List[str]]= Form(None),category: int = Form(...), street: str = Form(...), no_house: str = Form(...), colonia : str = Form(...), municipio: str = Form(...), estado: str = Form(...), latitud : float = Form(...), altitud: float = Form(...), horario:str=Form(...), phone: List[str] =Form(...), idseller: int = Form(...), db: Session = Depends(get_db)):
- 
-  try:
+def create_stand(
+    name: str = Form(...),
+    description: str = Form(...),
+    image: List[str] = Form(...),     
+    category: int = Form(...),
+    street: str = Form(...),
+    no_house: str = Form(...),
+    colonia: str = Form(...),
+    municipio: str = Form(...),
+    estado: str = Form(...),
+    latitud: float = Form(...),
+    altitud: float = Form(...),
+    horario: str = Form(...),
+    phone: List[str] = Form(...),
+    idseller: int = Form(...),
+    db: Session = Depends(get_db)
+):
+    try:
         new_stand = StandModel(
-           name = name, 
-           description = description, 
-           image = image, 
-           category = category, 
-           street = street, 
-           no_house = no_house, 
-           colonia = colonia, 
-           municipio = municipio, 
-           estado = estado, 
-           latitud = latitud, 
-           altitud = altitud, 
-           horario = horario, 
-           phone = phone, 
-           idseller = idseller
+            name=name,
+            description=description,
+            image=image,  # Recibimos las listas directamente
+            category=category,
+            street=street,
+            no_house=no_house,
+            colonia=colonia,
+            municipio=municipio,
+            estado=estado,
+            latitud=latitud,
+            altitud=altitud,
+            horario=horario,
+            phone=phone,  # Recibimos las listas directamente
+            idseller=idseller
         )
+
+        # Agregar el nuevo stand a la base de datos
         db.add(new_stand)
         db.commit()
-        db.refresh(new_stand)
-        db.commit()
-        return new_stand
-  except HTTPException as e:
+        db.refresh(new_stand)  # Actualizar el objeto con los datos de la base de datos
+
+        return new_stand  # Devolver el nuevo stand creado
+
+    except HTTPException as e:
         raise e
-    
-  except Exception as e:
-        print("Error durante el registro del producto:", e) 
+
+    except Exception as e:
+        print("Error durante el registro del producto:", e)
         raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.")
 @stand_router.get('/stand', status_code=status.HTTP_200_OK, response_model=List[StandResponse])
 def get_all_stands(db: Session = Depends(get_db)):

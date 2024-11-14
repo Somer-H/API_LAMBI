@@ -4,7 +4,7 @@ from databasecontent.database import get_db
 from typing import List
 from models.sell import SellModel
 from sellers.seller_models import Seller
-from schemas.sell import SellResponse, CreateSell, UpdateSell
+from schemas.sell import SellResponse, CreateSell, UpdateSell, SellProduct
 sell_router = APIRouter()
 @sell_router.post("/sell", status_code=status.HTTP_201_CREATED, response_model=SellResponse)
 def create_sell(stand: CreateSell, db: Session = Depends(get_db)):
@@ -64,4 +64,17 @@ def get_sell_byId(idsell: int, db: Session = Depends(get_db)):
     if(sell): 
         return sell
     else: 
-        return False    
+        return False
+@sell_router.post("/sellProduct", status_code = status.HTTP_201_CREATED, response_model= SellProduct)
+def add_sell_product(sell: SellProduct, db: Session = Depends(get_db)): 
+    try:
+     new_sell = SellModel(**sell.dict())
+     db.add(new_sell)
+     db.commit
+     return new_sell 
+    except HTTPException as e:
+        raise e
+    
+    except Exception as e:
+        print("Error durante el registro del producto:", e) 
+        raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.")

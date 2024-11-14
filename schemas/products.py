@@ -1,13 +1,13 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 class ProductBase(BaseModel):
     name: str
     description: str
     price: float
-    amount: float
+    amount: int
     category: int
-    image: Optional[str]
+    image: Optional[List[str]]
     standid: int
     
     class Config:
@@ -16,9 +16,9 @@ class ProductUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None 
     price: Optional[float] = None 
-    amount: Optional[float] = None
+    amount: Optional[int] = None
     category: Optional[int] = None
-    image: Optional[str] = None
+    image: Optional[List[str]] = None
 class ProductCreate(ProductBase):
     pass
 

@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form
 from sqlalchemy.orm import Session
 from schemas.products import Product,ProductBase,ProductCreate,ProductUpdate
 from models.products import Product as ProductModel
 from datetime import datetime,timedelta
-from typing import List
+from typing import List, Optional
 import boto3
 import uuid
 from botocore.exceptions import NoCredentialsError
@@ -48,9 +48,17 @@ async def get_products(db: Session = Depends(get_db)):
     return db.query(ProductModel).all()
 
 @product_router.post("/products/", response_model=Product)
-async def create_product(product: ProductCreate, db: Session = Depends(get_db)):
+async def create_product(name: str = Form(...),description: str = Form(...),price: float = Form(...), amount: int = Form(...), category: int = Form(...), image: Optional[List[str]] = Form(...), standid:int = Form(...), db: Session = Depends(get_db)):
     try:
-        new_product = ProductModel(**product.dict())
+        new_product = ProductModel(
+            name = name, 
+            description = description, 
+            price = price, 
+            amount = amount, 
+            category = category,
+            image = image, 
+            standid = standid
+        )
         db.add(new_product)
         db.commit()
         db.refresh(new_product)

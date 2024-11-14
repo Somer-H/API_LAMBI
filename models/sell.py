@@ -12,3 +12,10 @@ class SellModel(Base):
      description = Column(String, nullable = True)
      sellerid = Column(Integer, ForeignKey('Seller.iduser'), nullable=True)
      idbuyer = Column(Integer, ForeignKey('Buyer.iduser'), nullable=True)
+
+class SellProduct(Base): 
+     __tablename__ = "sellproduct"
+     
+     idsell = Column(Integer, ForeignKey('stand.idstand'),primary_key=True, nullable=True)
+     idproduct = Column(Integer, ForeignKey('product.idproduct'),primary_key=True, nullable = True)
+     amount = Column(Integer, nullable = True)
