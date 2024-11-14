@@ -1,19 +1,31 @@
-from fastapi import APIRouter, Depends, HTTPException,status
+from fastapi import APIRouter, Depends, HTTPException,status, Form
 from sqlalchemy.orm import Session
 from databasecontent.database import get_db
-from typing import List
+from typing import List, Optional
 from models.stand import Stand as StandModel, CategoryModel
 from sellers.seller_models import Seller
 from schemas.stand import StandCreate, StandResponse,StandUpdateRequest, Catetory, CategoryResponse, StandSellerResponse
 stand_router = APIRouter()
-
-import json
-
 @stand_router.post("/stand", status_code=status.HTTP_200_OK, response_model=StandResponse)
-def create_stand(stand: StandCreate, db: Session = Depends(get_db)):
+def create_stand(name:str= Form(...),description: str= Form(...), image: Optional[List[str]]= Form(None),category: int = Form(...), street: str = Form(...), no_house: str = Form(...), colonia : str = Form(...), municipio: str = Form(...), estado: str = Form(...), latitud : float = Form(...), altitud: float = Form(...), horario:str=Form(...), phone: List[str] =Form(...), idseller: int = Form(...), db: Session = Depends(get_db)):
  
   try:
-        new_stand = StandModel(**stand.dict())
+        new_stand = StandModel(
+           name = name, 
+           description = description, 
+           image = image, 
+           category = category, 
+           street = street, 
+           no_house = no_house, 
+           colonia = colonia, 
+           municipio = municipio, 
+           estado = estado, 
+           latitud = latitud, 
+           altitud = altitud, 
+           horario = horario, 
+           phone = phone, 
+           idseller = idseller
+        )
         db.add(new_stand)
         db.commit()
         db.refresh(new_stand)
@@ -36,7 +48,7 @@ def put_stand(idstand: int, stand_update: StandUpdateRequest, db: Session = Depe
         raise HTTPException(status_code=404, detail="Seller not found")
     updated = False
     if stand_update.altitud is not None:
-        stand.altitud = stand_update.altitud
+        stand.altitud = stand_update.altitud 
         updated = True
     if stand_update.category is not None:
         stand.category = stand_update.category

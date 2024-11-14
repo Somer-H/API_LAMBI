@@ -23,8 +23,8 @@ class StandSellerResponse(BaseModel):
     colonia: str
     municipio: str
     estado: str
-    latitud: str
-    altitud: str
+    latitud: float
+    altitud: float
     category: int
     seller_name: str
     seller_lastname: str
@@ -38,8 +38,8 @@ class StandBase(BaseModel):
     colonia: str
     municipio: str
     estado: str
-    latitud: str
-    altitud: str
+    latitud: float
+    altitud: float
     horario: str
     phone: List[str]
     idseller: int
@@ -55,8 +55,8 @@ class StandUpdateRequest(BaseModel):
     colonia: Optional[str] = None
     municipio: Optional[str] = None
     estado: Optional[str] = None 
-    latitud: Optional[str]= None 
-    altitud: Optional[str] = None
+    latitud: Optional[float]= None 
+    altitud: Optional[float] = None
     horario: Optional[str] = None 
 class StandCreate(StandBase):
     pass
