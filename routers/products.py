@@ -143,3 +143,9 @@ async def search_products(search_term: str, db: Session = Depends(get_db)):
     if not products:
         raise HTTPException(status_code=404, detail="No products found matching the search term.")
     return products  
+@product_router.get("/productsWithStandId/{standid}", response_model=List[Product])
+def get_products_with_stand_id(standid: int, db: Session = Depends(get_db)):
+    products = db.query(ProductModel).filter(ProductModel.standid == standid).all()
+    if not products:
+        raise HTTPException(status_code=404, detail="No products found in the specified stand.")
+    return products
