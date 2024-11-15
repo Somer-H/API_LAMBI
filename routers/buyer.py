@@ -7,7 +7,7 @@ from typing import List
 import bcrypt
 from schemas.buyer import Buyer,BuyerUpdate, BuyerCreate,BuyerResponseGet,BuyerLogin,BuyerLoginResponse,BuyerUpdateResponse
 from models.buyer import Buyer as BuyerModel
-from databasecontent.database import engine, get_db, Base
+from databasecontent.database import get_db
 from schemas.favorite import FavoriteBase, FavoriteResponse
 from models.favorite import Favorite
 from schemas.stand import StandFavoriteResponse
@@ -123,7 +123,7 @@ def addFavorite(favorite: FavoriteBase, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error adding favorite: {str(e)}")
-@buyer_router.put("/change/favorite/{iduser}/{idstand}", status_code=status.HTTP_200_OK, response_model=bool)
+@buyer_router.put("/changeToFalse/favorite/{iduser}/{idstand}", status_code=status.HTTP_200_OK, response_model=bool)
 def delete_favorite(iduser: int, idstand: int, db: Session = Depends(get_db)):
     favorite_search = db.query(Favorite).filter(Favorite.iduser==iduser).filter(Favorite.idstand==idstand).first()
     if(favorite_search):
@@ -133,3 +133,14 @@ def delete_favorite(iduser: int, idstand: int, db: Session = Depends(get_db)):
         return True
     else: 
         return False    
+@buyer_router.put("/changeToTrue/favorite/{iduser}/{idstand}", status_code=status.HTTP_200_OK, response_model=bool)
+def recuperate_favorite(iduser: int, idstand: int, db: Session = Depends(get_db)):
+    favorite_search = db.query(Favorite).filter(Favorite.iduser==iduser).filter(Favorite.idstand==idstand).first()
+    if(favorite_search):
+        favorite_search.status= True
+        db.commit()
+        db.refresh(favorite_search)
+        return True
+    else: 
+        return False    
+    

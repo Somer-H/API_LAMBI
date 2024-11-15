@@ -201,7 +201,7 @@ def get_favorites(db: Session = Depends(get_db)):
         else: 
             return False 
 @stand_router.get("/favoritebyId/{iduser}/{idstand}", status_code=status.HTTP_200_OK, response_model= FavoriteResponse | bool)
-def get_favorite_byId(iduser: int, idstand: int, db: Session= Depends(get_db())): 
+def get_favorite_byId(iduser: int, idstand: int, db: Session= Depends(get_db)): 
             favorite = db.query(Favorite).filter(Favorite.iduser == iduser).filter(Favorite.idstand == idstand).first()
             if(favorite): 
                 return favorite

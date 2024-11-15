@@ -2,26 +2,64 @@ from fastapi import APIRouter, Depends, HTTPException,status
 from sqlalchemy.orm import Session
 from databasecontent.database import get_db
 from typing import List
-from models.sell import SellModel
-from sellers.seller_models import Seller
-from schemas.sell import SellResponse, CreateSell, UpdateSell, SellProduct
+from models.sell import SellModel, SellProduct as SellProductModel
+from schemas.sell import SellProductResponse, UpdateSell, SellProduct, SellRequest, SellResponse
+from models.products import Product
 sell_router = APIRouter()
-@sell_router.post("/sell", status_code=status.HTTP_201_CREATED, response_model=SellResponse)
-def create_sell(stand: CreateSell, db: Session = Depends(get_db)):
- 
-  try:
-        new_sell = SellModel(**stand.dict())
+@sell_router.post("/sell", status_code=status.HTTP_201_CREATED, response_model=SellProductResponse)
+def create_sell(sell: SellRequest, db: Session = Depends(get_db)):
+    try:
+        all_products = db.query(Product).all()
+        products_dict = {product.idproduct: product for product in all_products}
+        new_sell = SellModel(
+            hour=sell.hour,
+            date=sell.date,
+            description=sell.description,
+            sellerid=sell.sellerid,
+            idbuyer=sell.idbuyer
+        )
         db.add(new_sell)
-        db.commit()
+        db.commit()  
         db.refresh(new_sell)
-        return new_sell
-  except HTTPException as e:
+        inserted_sells = {"sell": new_sell, "sells": []}
+        id = new_sell.idsell
+        total_price = 0
+        for sellProductInsert in sell.sells:
+            sellProduct = SellProductModel(
+                idsell=id,
+                idproduct=sellProductInsert.idproduct,
+                amount=sellProductInsert.amount
+            )
+            db.add(sellProduct)
+            inserted_sells["sells"].append(sellProduct)
+            
+            # Obtener el producto usando el diccionario
+            product = products_dict.get(sellProductInsert.idproduct)
+            if product:
+                if(product.amount<sellProductInsert.amount):
+                    db.delete(new_sell)
+                    db.commit()  
+                    db.rollback()        
+                    raise HTTPException(status_code=400, detail="La cantidad que intenta ingresar es mayor a la que existe")
+                else: 
+                    total_price += product.price * sellProductInsert.amount
+            else:
+                db.rollback()
+                db.delete(new_sell)
+                db.commit()
+                raise HTTPException(status_code=400, detail= "Este producto no se encontró")
+        db.commit()
+        for product in inserted_sells["sells"]:
+            db.refresh(product)
+        inserted_sells["total_price"] = total_price
+
+        return inserted_sells
+    except HTTPException as e:
         raise e
-    
-  except Exception as e:
-        print("Error durante el registro del producto:", e) 
+    except Exception as e:
+        print("Error durante el registro del producto:", e)
         raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.")
-@sell_router.get("sell", status_code=status.HTTP_200_OK, response_model=List[SellResponse])
+@sell_router.get("/sell", status_code=status.HTTP_200_OK, response_model=List[SellResponse])
 def get_sell(db: Session = Depends(get_db)):
      all_sells = db.query(SellModel).all()
      return all_sells  
@@ -30,7 +68,6 @@ def put_sell(idsell: int, sell_update: UpdateSell, db: Session = Depends(get_db)
     sell = db.query(SellModel).filter(SellModel.idsell == idsell).first()
     if not sell:
         raise HTTPException(status_code=404, detail="Seller not found")
-        return False
     updated = False
     if sell_update.date is not None:
         sell.date = sell_update.date
@@ -39,7 +76,7 @@ def put_sell(idsell: int, sell_update: UpdateSell, db: Session = Depends(get_db)
         sell.hour = sell_update.hour
         updated = True
     if sell_update.description is not None:
-        sell.description = sell.description
+        sell.description = sell_update.description
         updated = True       
     if updated:
         try:
@@ -70,7 +107,7 @@ def add_sell_product(sell: SellProduct, db: Session = Depends(get_db)):
     try:
      new_sell = SellModel(**sell.dict())
      db.add(new_sell)
-     db.commit
+     db.commit()
      return new_sell 
     except HTTPException as e:
         raise e

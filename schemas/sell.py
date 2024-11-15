@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 class Sell(BaseModel): 
     hour: str
@@ -11,8 +11,18 @@ class Sell(BaseModel):
         orm_mode = True
 class SellProduct(BaseModel):
     idsell: int 
-    idproduc: int  
+    idproduct: int  
     amount: int
+class SellProductRequest(BaseModel):
+    idproduct: int
+    amount: int
+class SellRequest(BaseModel): 
+    hour: str
+    date: str
+    description: str
+    sellerid: int
+    idbuyer: int
+    sells: List[SellProductRequest]
 class CreateSellProduct(SellProduct): 
     pass          
 class CreateSell(Sell): 
@@ -22,4 +32,10 @@ class UpdateSell(BaseModel):
     date: Optional[str] = None
     description: Optional[str] = None
 class SellResponse(Sell): 
-    idsell: int        
+    idsell: int              
+class SellProductResponse(BaseModel):
+    sell: SellResponse
+    sells: List[SellProduct]
+    total_price: float
+    class Config:
+        orm_mode = True
