@@ -38,3 +38,9 @@ class Buyer(BuyerBase):
 
     class Config:
         orm_mode = True
+class RateBase(BaseModel): 
+    idstand: int
+    idbuyer: int 
+    stars: int
+    class Config: 
+        orm_mode = True        

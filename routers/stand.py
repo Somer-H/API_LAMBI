@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException,status, Form
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from databasecontent.database import get_db
 from typing import List
 from models.favorite import Favorite
 from models.stand import Stand as StandModel, CategoryModel
+from models.buyer import RateModel
 from sellers.seller_models import Seller
 from schemas.stand import StandResponse,StandUpdateRequest, Catetory, CategoryResponse, StandSellerResponse, StandFavoriteResponse
 from schemas.favorite import FavoriteResponse
@@ -173,7 +175,17 @@ def get_stands(idseller:int, db: Session = Depends(get_db)):
         return False    
 @stand_router.get("/favorite", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
 def get_favorites(db: Session = Depends(get_db)):
-        favorites = (
+    rating = (
+        db.query(
+            RateModel.idstand,
+            func.avg(RateModel.stars).label("rating")
+            #en la documentación viene la función avg que sirve para calcular el promedio, pues aquí me sirve
+        )
+        .group_by(RateModel.idstand)
+        #el subquery sirve para poder mandar a llamar este query para alguna otra ocasión, no se ejecuta en el momento
+        .subquery()
+    )
+    favorites = (
         db.query(
             StandModel.idstand,
             StandModel.name,
@@ -192,14 +204,59 @@ def get_favorites(db: Session = Depends(get_db)):
             StandModel.latitud,
             Favorite.iduser.label("favorite_user"),
             Favorite.status.label("favorite_status"),
+            rating.c.rating
+            #.c es para acceder a la columna, ya que el .group_by me lo guarda todo como si de una tabla se tratase
         )
         .outerjoin(Favorite, StandModel.idstand == Favorite.idstand)
+        .outerjoin(rating, StandModel.idstand == rating.c.idstand)
         .all()
+    )
+
+    if favorites:
+        return favorites
+    else:
+        return False
+@stand_router.get("/standWithRating/{idstand}", status_code=status.HTTP_200_OK, response_model=StandFavoriteResponse | bool)
+def get_favorites_byId(idstand: int, db: Session = Depends(get_db)):
+    rating = (
+        db.query(
+            RateModel.idstand,
+            func.avg(RateModel.stars).label("rating")
+            #en la documentación viene la función avg que sirve para calcular el promedio, pues aquí me sirve
         )
-        if(favorites): 
-         return favorites
-        else: 
-            return False 
+        .group_by(RateModel.idstand)
+        #el subquery sirve para poder mandar a llamar este query para alguna otra ocasión, no se ejecuta en el momento
+        .subquery()
+    )
+    favorites = (
+        db.query(
+            StandModel.idstand,
+            StandModel.name,
+            StandModel.description,
+            StandModel.idseller,
+            StandModel.street,
+            StandModel.no_house,
+            StandModel.colonia,
+            StandModel.municipio,
+            StandModel.estado,
+            StandModel.image,
+            StandModel.category,
+            StandModel.horario,
+            StandModel.phone,
+            StandModel.altitud,
+            StandModel.latitud,
+            rating.c.rating
+            #.c es para acceder a la columna, ya que el .group_by me lo guarda todo como si de una tabla se tratase
+        )
+        .outerjoin(rating, StandModel.idstand == rating.c.idstand)
+        .filter(StandModel.idstand == idstand).first()
+    )
+
+    if favorites:
+        return favorites
+    else:
+        return False
+    
 @stand_router.get("/favoritebyId/{iduser}/{idstand}", status_code=status.HTTP_200_OK, response_model= FavoriteResponse | bool)
 def get_favorite_byId(iduser: int, idstand: int, db: Session= Depends(get_db)): 
             favorite = db.query(Favorite).filter(Favorite.iduser == iduser).filter(Favorite.idstand == idstand).first()
@@ -217,5 +274,4 @@ def get_stand_by_user_id(idseller: int, search_term: str, db: Session = Depends(
     if stands:
         return stands
     else:
-        return False            
-  
+        return False             

@@ -5,8 +5,8 @@ from fastapi.responses import JSONResponse
 from datetime import datetime,timedelta
 from typing import List
 import bcrypt
-from schemas.buyer import Buyer,BuyerUpdate, BuyerCreate,BuyerResponseGet,BuyerLogin,BuyerLoginResponse,BuyerUpdateResponse
-from models.buyer import Buyer as BuyerModel
+from schemas.buyer import Buyer,BuyerUpdate, BuyerCreate,BuyerResponseGet,BuyerLogin,BuyerLoginResponse,BuyerUpdateResponse, RateBase
+from models.buyer import Buyer as BuyerModel, RateModel
 from databasecontent.database import get_db
 from schemas.favorite import FavoriteBase, FavoriteResponse
 from models.favorite import Favorite
@@ -143,4 +143,12 @@ def recuperate_favorite(iduser: int, idstand: int, db: Session = Depends(get_db)
         return True
     else: 
         return False    
-    
+@buyer_router.post("/rate", status_code=status.HTTP_201_CREATED, response_model=RateBase | bool)
+def add_rate(rate : RateBase, db: Session = Depends(get_db)): 
+    new_rate = RateModel(**rate.dict())
+    if(new_rate.stars > 5 or new_rate.stars < 0):
+        raise HTTPException(status_code=400, detail="Solo puede añadir de 1 a 5 estrellas")
+    else:
+     db.add(new_rate)
+     db.commit()
+     return new_rate

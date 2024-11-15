@@ -63,6 +63,7 @@ class StandFavoriteResponse(BaseModel):
     latitud: float
     favorite_user: Optional[int] = None
     favorite_status: Optional[bool] = None
+    rating : Optional[float] = None
     class Config:
         orm_mode = True
 class StandUpdateRequest(BaseModel):
