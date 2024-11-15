@@ -24,6 +24,5 @@ class ProductCreate(ProductBase):
 
 class Product(ProductBase):
     idproduct: int
-
     class Config:
         orm_mode = True
