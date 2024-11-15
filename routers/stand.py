@@ -207,3 +207,15 @@ def get_favorite_byId(iduser: int, idstand: int, db: Session= Depends(get_db)):
                 return favorite
             else: 
                 return False
+@stand_router.get("/stand/seller/{idseller}/{search_term}", status_code=status.HTTP_200_OK, response_model=List[StandResponse] | bool)
+def get_stand_by_user_id(idseller: int, search_term: str, db: Session = Depends(get_db)):
+    stands = db.query(StandModel).filter(
+        StandModel.idseller == idseller,
+        StandModel.name.ilike(f"%{search_term}%")
+    ).all()
+    
+    if stands:
+        return stands
+    else:
+        return False            
+  

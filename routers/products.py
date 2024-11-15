@@ -137,3 +137,9 @@ async def get_products_by_seller(seller_id: int, db: Session = Depends(get_db)):
     if not products:
         raise HTTPException(status_code=404, detail="No products found by the specified seller.")
     return products
+@product_router.get("/products/found/product/{search_term}", response_model=List[Product])
+async def search_products(search_term: str, db: Session = Depends(get_db)):
+    products = db.query(ProductModel).filter(ProductModel.name.ilike(f"%{search_term}%")).all()
+    if not products:
+        raise HTTPException(status_code=404, detail="No products found matching the search term.")
+    return products  
