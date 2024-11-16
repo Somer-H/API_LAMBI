@@ -13,12 +13,6 @@ from dotenv import load_dotenv
 load_dotenv()
 product_router = APIRouter()
 
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_SESSION_TOKEN = os.getenv("AWS_SESSION_TOKEN")
-AWS_REGION_NAME = os.getenv("AWS_REGION_NAME")
-S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
-
 # Función para subir imágenes a S3
 def upload_images_to_s3(image_files: List[UploadFile], bucket_name: str) -> List[str]:
     s3_client = boto3.client(
