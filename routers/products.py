@@ -6,70 +6,101 @@ from datetime import datetime,timedelta
 from typing import List, Optional
 import boto3
 import uuid
-from botocore.exceptions import NoCredentialsError
+from botocore.exceptions import NoCredentialsError, ClientError
 from databasecontent.database import engine, get_db, Base
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 product_router = APIRouter()
 
-AWS_ACCESS_KEY_ID = ""
-AWS_SECRET_ACCESS_KEY = ""
-AWS_REGION_NAME = "us-east-1"
-S3_BUCKET_NAME = "lambiimage"
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_SESSION_TOKEN = os.getenv("AWS_SESSION_TOKEN")
+AWS_REGION_NAME = os.getenv("AWS_REGION_NAME")
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 
-
-def upload_image_to_s3(image_file: UploadFile, bucket_name: str) -> str:
+# Función para subir imágenes a S3
+def upload_images_to_s3(image_files: List[UploadFile], bucket_name: str) -> List[str]:
     s3_client = boto3.client(
         "s3",
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        aws_session_token=AWS_SESSION_TOKEN,
         region_name=AWS_REGION_NAME
     )
-    try:
-        # Generar un nombre único para la imagen
-        unique_filename = f"{uuid.uuid4()}.{image_file.filename.split('.')[-1]}"
+    uploaded_urls = []
+
+    for image_file in image_files:
+        try:
+            # Generar un nombre único para cada imagen
+            unique_filename = f"{uuid.uuid4()}.{image_file.filename.split('.')[-1]}"
+            
+            # Subir la imagen al bucket S3
+            s3_client.upload_fileobj(image_file.file, bucket_name, unique_filename)
+            
+            # Construir la URL de la imagen y agregarla a la lista
+            image_url = f"https://{bucket_name}.s3.{AWS_REGION_NAME}.amazonaws.com/{unique_filename}"
+            uploaded_urls.append(image_url)
         
-        # Subir la imagen al bucket S3
-        s3_client.upload_fileobj(image_file.file, bucket_name, unique_filename)
-        
-        # Construir la URL de la imagen
-        image_url = f"https://{bucket_name}.s3.{AWS_REGION_NAME}.amazonaws.com/{unique_filename}"
-        return image_url
-    except NoCredentialsError:
-        raise HTTPException(status_code=500, detail="Error with AWS credentials")
-    except Exception as e:
-        print("Error uploading image:", e)
-        raise HTTPException(status_code=500, detail="Error uploading image")
+        except NoCredentialsError:
+            raise HTTPException(status_code=500, detail="Error with AWS credentials")
+        except ClientError as e:
+            # Captura el error específico de AWS S3
+            raise HTTPException(status_code=500, detail=f"AWS ClientError: {str(e)}")
+        except Exception as e:
+            # Otros errores
+            raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+    
+    return uploaded_urls
 
-
-
-
-@product_router.get("/products/", response_model=List[Product])
-async def get_products(db: Session = Depends(get_db)):
-    return db.query(ProductModel).all()
 
 @product_router.post("/products/", response_model=Product)
-async def create_product(name: str = Form(...),description: str = Form(...),price: float = Form(...), amount: int = Form(...), category: int = Form(...), image: Optional[List[str]] = Form(...), standid:int = Form(...), db: Session = Depends(get_db)):
+async def create_product(
+    name: str = Form(...), 
+    description: str = Form(...), 
+    price: float = Form(...), 
+    amount: int = Form(...), 
+    category: int = Form(...), 
+    image: Optional[List[UploadFile]] = File(...),  # Recibir imágenes como archivos
+    standid: int = Form(...), 
+    db: Session = Depends(get_db)
+):
     try:
+        print(f"Received image files: {image}")  # Log para ver las imágenes recibidas
+        
+        # Si se han enviado imágenes, subimos a S3
+        image_urls = []
+        if image:
+            image_urls = upload_images_to_s3(image, S3_BUCKET_NAME)
+            print(f"Uploaded image URLs: {image_urls}")  # Verifica si las URLs están siendo generadas
+
+        # Crear el nuevo producto
         new_product = ProductModel(
-            name = name, 
-            description = description, 
-            price = price, 
-            amount = amount, 
-            category = category,
-            image = image, 
-            standid = standid
+            name=name,
+            description=description,
+            price=price,
+            amount=amount,
+            category=category,
+            image=image_urls,  # Guardar las URLs de las imágenes
+            standid=standid
         )
+        
+        # Guardar en la base de datos
         db.add(new_product)
         db.commit()
         db.refresh(new_product)
+
         return new_product
-    
+     
     except HTTPException as e:
         raise e
     
     except Exception as e:
-        print("Error durante el registro del producto:", e) 
+        print("Error durante el registro del producto:", e)  # Log para ver el error exacto
         raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.")
+@product_router.get("/products/", response_model=List[Product])
+async def get_products(db: Session = Depends(get_db)):
+    return db.query(ProductModel).all()
 
 @product_router.get("/products/{product_id}", response_model=Product)
 async def get_product_by_id(product_id: int, db: Session = Depends(get_db)):
