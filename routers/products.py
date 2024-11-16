@@ -8,15 +8,17 @@ import boto3
 import uuid
 from botocore.exceptions import NoCredentialsError, ClientError
 from databasecontent.database import engine, get_db, Base
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 product_router = APIRouter()
 
 
-AWS_ACCESS_KEY_ID = "ASIA47TC5XZK5BZZC3LY"
-AWS_SECRET_ACCESS_KEY = "+OZKw1j0sIMl40XurgZlSS7ZncnQMQn+KVKoI9hG"
-AWS_SESSION_TOKEN = "IQoJb3JpZ2luX2VjEJv//////////wEaCXVzLXdlc3QtMiJHMEUCIQC0m1nJkmaULvsTESyPr9j6DAXdTvyvYHuHoBVZ18mp2AIgeocpxieOyVoMCWO9cEXYzb7frYf27rJsw9GQBOhTKPgquwIINBAAGgw4OTI0ODY5MjU5MDkiDKOPL5rcBaccU1n0kiqYAter3uW8Q7P40mZK72UCXdEL30mOpq53maa+gkWDjk4hlJDkAkVWnQ5E0QIZz+Avo0lAxA1Y661/0aDKsUU9d9ODVlUXR5qH5omiUgWKvSFDr/n2CWc20fAzvHkD9LYD8ZbEwb/EUze/B9QZX6sJRBpW+OYGYPcO9T7HW/IgG7c1R18yWZZibdkiToU1bwpNNS6gmcACW6QF1VFKafrKnfQLyMD7oZm0mf1h7LQ1tywGkEOGEQOSA77L7BIZ22k4ZfVNIfMB5yqdsU+nujDedwuLCjKCfzDc9xa95LLwr6u0HJdaPFYPpqSBg9fzmVihJNyms/3zPKvCm8WIGn2DFzemfz6u1ROeRmCIVbuwILFRgHsRubFm6kcw3tnjuQY6nQEyZaO1MVWHtSDTv2WpHmzHZC6ynWWIslaH4ADJjSk2UPxUgIMhUBfORhr4h89X7Jll27Ap6d4cqtibMh/npVta9q3bGA2QTmYcjX3r3dHSnHy1ZTsLy9Gg8RqIOSAa93BkbTSo3Fvusuqyl2WuZHz/6EzZgvetHBfUTvgjkHS9MMeaLcXnp//awQ9ynNofkDE+engz+bi6ttwdv8me"
-AWS_REGION_NAME = "us-east-1"
-S3_BUCKET_NAME = "lambifile"
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_SESSION_TOKEN = os.getenv("AWS_SESSION_TOKEN")
+AWS_REGION_NAME = os.getenv("AWS_REGION_NAME")
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 
 # Función para subir imágenes a S3
 def upload_images_to_s3(image_files: List[UploadFile], bucket_name: str) -> List[str]:
