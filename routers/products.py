@@ -8,7 +8,6 @@ import boto3
 import uuid
 from botocore.exceptions import NoCredentialsError
 from databasecontent.database import engine, get_db, Base
-
 product_router = APIRouter()
 
 AWS_ACCESS_KEY_ID = ""
@@ -48,7 +47,7 @@ async def get_products(db: Session = Depends(get_db)):
     return db.query(ProductModel).all()
 
 @product_router.post("/products/", response_model=Product)
-async def create_product(name: str = Form(...),description: str = Form(...),price: float = Form(...), amount: int = Form(...), category: int = Form(...), image: Optional[List[str]] = Form(...), standid:int = Form(...), db: Session = Depends(get_db)):
+async def create_product(name: str = Form(...),description: str = Form(...),price: float = Form(...), amount: int = Form(...), category: int = Form(...), image: Optional[List[UploadFile]] = File(...), standid:int = Form(...), db: Session = Depends(get_db)):
     try:
         new_product = ProductModel(
             name = name, 
