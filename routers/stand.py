@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException,status, Form
+from fastapi import APIRouter, Depends, HTTPException,status, Form,File, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 from databasecontent.database import get_db
@@ -9,12 +9,59 @@ from models.buyer import RateModel
 from sellers.seller_models import Seller
 from schemas.stand import StandResponse,StandUpdateRequest, Catetory, CategoryResponse, StandSellerResponse, StandFavoriteResponse
 from schemas.favorite import FavoriteResponse
+import boto3
+import uuid
+from botocore.exceptions import NoCredentialsError, ClientError
 stand_router = APIRouter()
+import os
+from dotenv import load_dotenv
+load_dotenv()
+product_router = APIRouter()
+
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_SESSION_TOKEN = os.getenv("AWS_SESSION_TOKEN")
+AWS_REGION_NAME = os.getenv("AWS_REGION_NAME")
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+
+def upload_images_to_s3(image_files: List[UploadFile], bucket_name: str) -> List[str]:
+    s3_client = boto3.client(
+        "s3",
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        aws_session_token=AWS_SESSION_TOKEN,
+        region_name=AWS_REGION_NAME
+    )
+    uploaded_urls = []
+
+    for image_file in image_files:
+        try:
+            # Generar un nombre único para cada imagen
+            unique_filename = f"{uuid.uuid4()}.{image_file.filename.split('.')[-1]}"
+            
+            # Subir la imagen al bucket S3
+            s3_client.upload_fileobj(image_file.file, bucket_name, unique_filename)
+            
+            # Construir la URL de la imagen y agregarla a la lista
+            image_url = f"https://{bucket_name}.s3.{AWS_REGION_NAME}.amazonaws.com/{unique_filename}"
+            uploaded_urls.append(image_url)
+        
+        except NoCredentialsError:
+            raise HTTPException(status_code=500, detail="Error with AWS credentials")
+        except ClientError as e:
+            # Captura el error específico de AWS S3
+            raise HTTPException(status_code=500, detail=f"AWS ClientError: {str(e)}")
+        except Exception as e:
+            # Otros errores
+            raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+    
+    return uploaded_urls
+
 @stand_router.post("/stand", status_code=status.HTTP_200_OK, response_model=StandResponse)
 def create_stand(
     name: str = Form(...),
     description: str = Form(...),
-    image: List[str] = Form(...),     
+    image: List[UploadFile] = File(...),     
     category: int = Form(...),
     street: str = Form(...),
     no_house: str = Form(...),
@@ -29,10 +76,17 @@ def create_stand(
     db: Session = Depends(get_db)
 ):
     try:
+        image_urls = []
+        if image:
+            image_urls = upload_images_to_s3(image, S3_BUCKET_NAME)
+            print(f"Uploaded image URLs: {image_urls}")  # Verifica si las URLs están siendo generadas
+            print(image_urls)
+        if not image:
+            raise HTTPException(status_code=400, detail="No image files were provided.")
         new_stand = StandModel(
             name=name,
             description=description,
-            image=image,  # Recibimos las listas directamente
+            image=image_urls,  # Recibimos las listas directamente
             category=category,
             street=street,
             no_house=no_house,
@@ -214,6 +268,47 @@ def get_favorites(db: Session = Depends(get_db)):
         return favorites
     else:
         return False
+@stand_router.get("/favorite{idbuyer}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
+def get_favorites(idbuyer: int, db: Session = Depends(get_db)):
+    rating = (
+        db.query(
+            RateModel.idstand,
+            func.avg(RateModel.stars).label("rating")
+        )
+        .group_by(RateModel.idstand)
+        .subquery()
+    )
+    favorites = (
+        db.query(
+            StandModel.idstand,
+            StandModel.name,
+            StandModel.description,
+            StandModel.idseller,
+            StandModel.street,
+            StandModel.no_house,
+            StandModel.colonia,
+            StandModel.municipio,
+            StandModel.estado,
+            StandModel.image,
+            StandModel.category,
+            StandModel.horario,
+            StandModel.phone,
+            StandModel.altitud,
+            StandModel.latitud,
+            Favorite.iduser.label("favorite_user"),
+            Favorite.status.label("favorite_status"),
+            rating.c.rating
+            #.c es para acceder a la columna, ya que el .group_by me lo guarda todo como si de una tabla se tratase
+        )
+        .outerjoin(Favorite, StandModel.idstand == Favorite.idstand)
+        .outerjoin(rating, StandModel.idstand == rating.c.idstand)
+        .filter(Favorite.iduser == idbuyer).all()
+    )
+
+    if favorites:
+        return favorites
+    else:
+        return False    
 @stand_router.get("/favoriteWIthCategory/{category}/{idbuyer}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
 def get_favorites(category: int, idbuyer: int, db: Session = Depends(get_db)):
     rating = (
