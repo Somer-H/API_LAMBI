@@ -19,10 +19,15 @@ ALGORITHM = "HS256"
 @buyer_router.post("/registerBuyer/", response_model=BuyerResponseGet)
 async def register_buyer(buyer: BuyerCreate, db: Session = Depends(get_db)):
     try:
+        # Verificar si el email ya está registrado
         db_buyer = db.query(BuyerModel).filter(BuyerModel.e_mail == buyer.e_mail).first()
         if db_buyer:
             raise HTTPException(status_code=400, detail="Email already registered")
+        
+        # Crear el hash de la contraseña
         hashed_password = bcrypt.hashpw(buyer.password.encode('utf-8'), bcrypt.gensalt())
+        
+        # Crear un nuevo registro de comprador
         new_buyer = BuyerModel(
             name=buyer.name,
             lastname=buyer.lastname,
@@ -34,15 +39,27 @@ async def register_buyer(buyer: BuyerCreate, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(new_buyer)
 
-        response = BuyerResponseGet(idbuyer=new_buyer.iduser, name=new_buyer.name, lastname=new_buyer.lastname)
+        # Generar el token JWT
+        expiration = datetime.utcnow() + timedelta(hours=1)
+        token = jwt.encode({"idbuyer": new_buyer.iduser, "exp": expiration}, SECRET_KEY, algorithm=ALGORITHM)
+
+        # Preparar la respuesta
+        response = JSONResponse(content={
+            "idbuyer": new_buyer.iduser,
+            "name": new_buyer.name,
+            "lastname": new_buyer.lastname
+        }, status_code=201)
         
+        # Incluir el token en el encabezado
+        response.headers["Authorization"] = f"Bearer {token}"
+
         return response
-    
+
     except HTTPException as e:
         raise e 
     
     except Exception as e:
-        print("Error durante el registro del comprador:", e) 
+        print("Error durante el registro del comprador:", e)
         raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.")
 
 

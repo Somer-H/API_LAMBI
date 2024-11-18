@@ -52,8 +52,10 @@ def get_all_users(db: Session = Depends(get_db)):
 @app.post('/sellers', status_code=status.HTTP_201_CREATED, response_model=SellerResponse)
 def create_user(post_user: SellerRequest, db: Session = Depends(get_db)):
     try:
+        # Crear un hash de la contraseña
         hashed_password = bcrypt.hashpw(post_user.password.encode('utf-8'), bcrypt.gensalt())
 
+        # Crear el nuevo usuario
         new_user = Seller(
             name=post_user.name,
             lastname=post_user.lastname,
@@ -64,10 +66,23 @@ def create_user(post_user: SellerRequest, db: Session = Depends(get_db)):
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
-        return new_user
+
+        # Generar un token JWT
+        expiration = datetime.utcnow() + timedelta(hours=1)
+        token = jwt.encode({"idseller": new_user.iduser, "exp": expiration}, SECRET_KEY, algorithm=ALGORITHM)
+
+        # Crear la respuesta con el token en el encabezado
+        response = JSONResponse(content={
+            "idseller": new_user.iduser,
+            "name": new_user.name,
+            "lastname": new_user.lastname
+        }, status_code=201)
+        response.headers["Authorization"] = f"Bearer {token}"
+
+        return response
 
     except Exception as e:
-        db.rollback()  
+        db.rollback()  # Revertir la transacción en caso de error
         raise HTTPException(status_code=500, detail="Error creating seller: " + str(e))
 
 @app.get("/sellers/{iduser}", response_model=SellerResponse)
