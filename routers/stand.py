@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException,status, Form,File, UploadFile
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, and_
 from databasecontent.database import get_db
 from typing import List
 from models.favorite import Favorite
@@ -311,6 +311,7 @@ def get_favorites(idbuyer: int, db: Session = Depends(get_db)):
         return False    
 @stand_router.get("/favoriteWIthCategory/{category}/{idbuyer}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
 def get_favorites(category: int, idbuyer: int, db: Session = Depends(get_db)):
+    # Subconsulta para calificaciones
     rating = (
         db.query(
             RateModel.idstand,
@@ -319,6 +320,8 @@ def get_favorites(category: int, idbuyer: int, db: Session = Depends(get_db)):
         .group_by(RateModel.idstand)
         .subquery()
     )
+
+    # Consulta principal
     favorites = (
         db.query(
             StandModel.idstand,
@@ -339,17 +342,107 @@ def get_favorites(category: int, idbuyer: int, db: Session = Depends(get_db)):
             Favorite.iduser.label("favorite_user"),
             Favorite.status.label("favorite_status"),
             rating.c.rating
-            #.c es para acceder a la columna, ya que el .group_by me lo guarda todo como si de una tabla se tratase
         )
-        .outerjoin(Favorite, StandModel.idstand == Favorite.idstand)
+        .outerjoin(Favorite, and_(StandModel.idstand == Favorite.idstand, Favorite.iduser == idbuyer))  # Solo favoritos del idbuyer
         .outerjoin(rating, StandModel.idstand == rating.c.idstand)
-        .filter(StandModel.category == category).filter(or_(Favorite.iduser == idbuyer, Favorite.iduser==None)).all()
+        .filter(StandModel.category == category)  # Todos los stands de la categoría
+        .all()
     )
 
+    # Retorno de resultados
     if favorites:
         return favorites
     else:
         return False
+@stand_router.get("/Allfavorites/{idbuyer}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
+def get_favorites(idbuyer: int, db: Session = Depends(get_db)):
+    # Subconsulta para calificaciones
+    rating = (
+        db.query(
+            RateModel.idstand,
+            func.avg(RateModel.stars).label("rating")
+        )
+        .group_by(RateModel.idstand)
+        .subquery()
+    )
+
+    # Consulta principal
+    favorites = (
+        db.query(
+            StandModel.idstand,
+            StandModel.name,
+            StandModel.description,
+            StandModel.idseller,
+            StandModel.street,
+            StandModel.no_house,
+            StandModel.colonia,
+            StandModel.municipio,
+            StandModel.estado,
+            StandModel.image,
+            StandModel.category,
+            StandModel.horario,
+            StandModel.phone,
+            StandModel.altitud,
+            StandModel.latitud,
+            Favorite.iduser.label("favorite_user"),
+            Favorite.status.label("favorite_status"),
+            rating.c.rating
+        )
+        .outerjoin(Favorite, and_(StandModel.idstand == Favorite.idstand, Favorite.iduser == idbuyer))  # Solo favoritos del idbuyer
+        .outerjoin(rating, StandModel.idstand == rating.c.idstand)
+        .all()
+    )
+
+    # Retorno de resultados
+    if favorites:
+        return favorites
+    else:
+        return False        
+@stand_router.get("/favoriteByIdStand/{idbuyer}/{idstand}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
+def get_favorites(idbuyer: int, idstand: int, db: Session = Depends(get_db)):
+    # Subconsulta para calificaciones
+    rating = (
+        db.query(
+            RateModel.idstand,
+            func.avg(RateModel.stars).label("rating")
+        )
+        .group_by(RateModel.idstand)
+        .subquery()
+    )
+
+    # Consulta principal
+    favorites = (
+        db.query(
+            StandModel.idstand,
+            StandModel.name,
+            StandModel.description,
+            StandModel.idseller,
+            StandModel.street,
+            StandModel.no_house,
+            StandModel.colonia,
+            StandModel.municipio,
+            StandModel.estado,
+            StandModel.image,
+            StandModel.category,
+            StandModel.horario,
+            StandModel.phone,
+            StandModel.altitud,
+            StandModel.latitud,
+            Favorite.iduser.label("favorite_user"),
+            Favorite.status.label("favorite_status"),
+            rating.c.rating
+        )
+        .outerjoin(Favorite, and_(StandModel.idstand == Favorite.idstand, Favorite.iduser == idbuyer))  # Solo favoritos del idbuyer
+        .outerjoin(rating, StandModel.idstand == rating.c.idstand)
+        .filter(StandModel.idstand == idstand)  # Todos los favoritos del stand con idstand
+        .all()
+    )
+
+    # Retorno de resultados
+    if favorites:
+        return favorites
+    else:
+        return False            
 @stand_router.get("/favoriteWIthName/{name}/{idbuyer}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
 def get_favorites(name: str, idbuyer: int, db: Session = Depends(get_db)):
     rating = (

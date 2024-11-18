@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from datetime import datetime,timedelta
 from typing import List
 import bcrypt
-from schemas.buyer import Buyer,BuyerUpdate, BuyerCreate,BuyerResponseGet,BuyerLogin,BuyerLoginResponse,BuyerUpdateResponse, RateBase
+from schemas.buyer import Buyer,BuyerUpdate, BuyerCreate,BuyerResponseGet,BuyerLogin,BuyerLoginResponse,BuyerUpdateResponse, RateBase, RateUpdate
 from models.buyer import Buyer as BuyerModel, RateModel
 from databasecontent.database import get_db
 from schemas.favorite import FavoriteBase, FavoriteResponse
@@ -152,3 +152,13 @@ def add_rate(rate : RateBase, db: Session = Depends(get_db)):
      db.add(new_rate)
      db.commit()
      return new_rate
+@buyer_router.put("/rate", status_code = status.HTTP_200_OK, response_model=RateBase | bool)
+def update_rate(idstand: int, idbuyer: int, rate: RateUpdate,db: Session = Depends(get_db)): 
+    rate_search = db.query(RateModel).filter(RateModel.idstand ==idstand). filter(RateModel.idbuyer == idbuyer).first()
+    if(rate_search):
+        rate_search.stars = rate.stars
+        db.commit()
+        db.refresh(rate_search)
+        return True
+    else:
+        return False

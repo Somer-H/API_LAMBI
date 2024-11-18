@@ -44,3 +44,7 @@ class RateBase(BaseModel):
     stars: int
     class Config: 
         orm_mode = True        
+class RateUpdate(BaseModel):
+    stars: int
+    class Config:
+        orm_mode = True        
