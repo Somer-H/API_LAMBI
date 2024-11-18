@@ -10,7 +10,7 @@ class SellModel(Base):
      hour = Column(String, nullable = True)
      date = Column(String, nullable = True)
      description = Column(String, nullable = True)
-     sellerid = Column(Integer, ForeignKey('Seller.iduser'), nullable=True)
+     standid = Column(Integer, ForeignKey('Seller.iduser'), nullable=True)
      idbuyer = Column(Integer, ForeignKey('Buyer.iduser'), nullable=True)
 
 class SellProduct(Base): 

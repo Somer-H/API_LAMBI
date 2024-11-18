@@ -5,7 +5,7 @@ class Sell(BaseModel):
     hour: str
     date: str
     description: str
-    sellerid: int
+    standid: int
     idbuyer: int
     class Config:
         orm_mode = True
@@ -20,7 +20,7 @@ class SellRequest(BaseModel):
     hour: str
     date: str
     description: str
-    sellerid: int
+    standid: int
     idbuyer: int
     sells: List[SellProductRequest]
 class CreateSellProduct(SellProduct): 
