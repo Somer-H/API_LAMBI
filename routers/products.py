@@ -103,22 +103,22 @@ async def get_product_by_id(product_id: int, db: Session = Depends(get_db)):
     return product
 
 @product_router.put("/products/{product_id}", response_model=Product)
-async def update_product(product_id: int, product: ProductUpdate, db: Session = Depends(get_db)):
+async def update_product(product_id: Optional[int], name: Optional[str] = Form(None),description: str = Form(None),price: Optional[float] = Form(None), amount: Optional[int] = Form(None), category: Optional[int] = Form(None), image: Optional[List[UploadFile]] = File(None), db: Session = Depends(get_db)):
     product_to_update = db.query(ProductModel).filter(ProductModel.idproduct == product_id).first()
     if not product_to_update:
         raise HTTPException(status_code=404, detail="Product not found")
-    if product.name is not None:
-        product_to_update.name = product.name
-    if product.description is not None:
-        product_to_update.description = product.description
-    if product.price is not None:
-        product_to_update.price = product.price
-    if product.amount is not None:
-        product_to_update.amount = product.amount
-    if product.category is not None:
-        product_to_update.category = product.category
-    if product.image is not None:
-        product_to_update.image = product.image
+    if name is not None:
+        product_to_update.name = name
+    if description is not None:
+        product_to_update.description = description
+    if price is not None:
+        product_to_update.price = price
+    if amount is not None:
+        product_to_update.amount = amount
+    if category is not None:
+        product_to_update.category = category
+    if image is not None:
+        product_to_update.image = image    
     db.commit()
     db.refresh(product_to_update)
     return product_to_update
