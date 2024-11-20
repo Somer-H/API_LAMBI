@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, status, HTTPException
 from typing import List
 from fastapi.responses import JSONResponse
+from fastapi.security import  HTTPAuthorizationCredentials, HTTPBearer
 from databasecontent.database import engine, get_db, Base
 from sellers.seller_schemas import SellerRequest,SellerLogin, SellerResponse, SellerUpdateRequest, SellerUpdate  # Importación desde sellers/user_schemas.py
 from sellers.seller_models import Seller  # Importación desde sellers/user_model.py
@@ -9,6 +10,9 @@ from datetime import datetime, timedelta
 import jwt
 import bcrypt
 app = FastAPI()
+bearer_scheme = HTTPBearer()
+from middleWare.middleWare import JWTMiddleware  # Ubica tu middleware en un archivo separado
+app.add_middleware(JWTMiddleware)
 from fastapi.middleware.cors import CORSMiddleware
 from routers.buyer import buyer_router
 from routers.products import product_router
@@ -49,8 +53,8 @@ def get_all_users(db: Session = Depends(get_db)):
         print(f'ID: {seller.iduser}, Nombre: {seller.name}, Lastaname: {seller.lastname}, E_mail: {seller.e_mail}, Password: {seller.password}')
     return all_sellers
 
-@app.post('/sellers', status_code=status.HTTP_201_CREATED, response_model=SellerResponse)
-def create_user(post_user: SellerRequest, db: Session = Depends(get_db)):
+@app.post('/protected/sellers', status_code=status.HTTP_201_CREATED, response_model=SellerResponse)
+def create_user(post_user: SellerRequest, db: Session = Depends(get_db),  authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     try:
         # Crear un hash de la contraseña
         hashed_password = bcrypt.hashpw(post_user.password.encode('utf-8'), bcrypt.gensalt())
@@ -85,15 +89,15 @@ def create_user(post_user: SellerRequest, db: Session = Depends(get_db)):
         db.rollback()  # Revertir la transacción en caso de error
         raise HTTPException(status_code=500, detail="Error creating seller: " + str(e))
 
-@app.get("/sellers/{iduser}", response_model=SellerResponse)
-def get_user(iduser: int, db: Session = Depends(get_db)):
+@app.get("/protected/sellers/{iduser}", response_model=SellerResponse)
+def get_user(iduser: int, db: Session = Depends(get_db),  authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     user = db.query(Seller).filter(Seller.iduser == iduser).first()
     if user is None:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return user
 
-@app.put("/sellers/{iduser}", status_code=status.HTTP_201_CREATED, response_model=SellerResponse)
-def put_user(iduser: int, seller_update: SellerUpdateRequest, db: Session = Depends(get_db)):
+@app.put("/protected/sellers/{iduser}", status_code=status.HTTP_201_CREATED, response_model=SellerResponse)
+def put_user(iduser: int, seller_update: SellerUpdateRequest, db: Session = Depends(get_db),  authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     seller = db.query(Seller).filter(Seller.iduser == iduser).first()
     if not seller:
         raise HTTPException(status_code=404, detail="Seller not found")
@@ -119,8 +123,8 @@ def put_user(iduser: int, seller_update: SellerUpdateRequest, db: Session = Depe
         except Exception as e:
             db.rollback()
             return seller
-@app.delete("/sellers/{iduser}", status_code=status.HTTP_201_CREATED, response_model= bool)
-def delete_user(iduser: int, db: Session = Depends(get_db)):
+@app.delete("/protected/sellers/{iduser}", status_code=status.HTTP_201_CREATED, response_model= bool)
+def delete_user(iduser: int, db: Session = Depends(get_db),  authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     seller = db.query(Seller).filter(Seller.iduser == iduser).first()
     if seller :
        db.delete(seller)

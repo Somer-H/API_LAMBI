@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, or_, and_
 from databasecontent.database import get_db
 from typing import List
+from fastapi.security import  HTTPAuthorizationCredentials, HTTPBearer
 from models.favorite import Favorite
 from models.stand import Stand as StandModel, CategoryModel
 from models.buyer import RateModel
@@ -16,6 +17,7 @@ stand_router = APIRouter()
 import os
 from dotenv import load_dotenv
 load_dotenv()
+bearer_scheme = HTTPBearer()
 product_router = APIRouter()
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
@@ -57,7 +59,7 @@ def upload_images_to_s3(image_files: List[UploadFile], bucket_name: str) -> List
     
     return uploaded_urls
 
-@stand_router.post("/stand", status_code=status.HTTP_200_OK, response_model=StandResponse)
+@stand_router.post("/protected/stand", status_code=status.HTTP_200_OK, response_model=StandResponse)
 def create_stand(
     name: str = Form(...),
     description: str = Form(...),
@@ -73,7 +75,8 @@ def create_stand(
     horario: str = Form(...),
     phone: List[str] = Form(...),
     idseller: int = Form(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db), 
+    authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)
 ):
     try:
         image_urls = []
@@ -113,11 +116,11 @@ def create_stand(
     except Exception as e:
         print("Error durante el registro del producto:", e)
         raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.")
-@stand_router.get('/stand', status_code=status.HTTP_200_OK, response_model=List[StandResponse])
-def get_all_stands(db: Session = Depends(get_db)):
+@stand_router.get('/protected/stand', status_code=status.HTTP_200_OK, response_model=List[StandResponse])
+def get_all_stands(db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     all_stands = db.query(StandModel).all()
     return all_stands
-@stand_router.put("/stand/{idstand}", status_code=status.HTTP_201_CREATED, response_model=StandResponse)
+@stand_router.put("/protected/stand/{idstand}", status_code=status.HTTP_201_CREATED, response_model=StandResponse)
 def put_stand(idstand: int, stand_update: StandUpdateRequest, db: Session = Depends(get_db)):
     stand = db.query(StandModel).filter(StandModel.idstand == idstand).first()
     if not stand:
@@ -151,8 +154,8 @@ def put_stand(idstand: int, stand_update: StandUpdateRequest, db: Session = Depe
         except Exception as e:
             db.rollback()
             return stand
-@stand_router.delete("/stand/{idstand}", status_code=status.HTTP_200_OK, response_model= bool)
-def delete_stand(idstand: int, db: Session = Depends(get_db)):
+@stand_router.delete("/protected/stand/{idstand}", status_code=status.HTTP_200_OK, response_model= bool)
+def delete_stand(idstand: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     stand = db.query(StandModel).filter(StandModel.idstand == idstand).first()
     if stand :
        db.delete(stand)
@@ -167,8 +170,8 @@ def get_stand_byId(idstand: int, db: Session = Depends(get_db)):
         return stand
     else: 
         return False
-@stand_router.get("/stand/seller/{idseller}", status_code = status.HTTP_200_OK, response_model=List[StandResponse] | bool)
-def get_stand_by_user_id(idseller: int, db: Session = Depends(get_db)):
+@stand_router.get("/protected/stand/seller/{idseller}", status_code = status.HTTP_200_OK, response_model=List[StandResponse] | bool)
+def get_stand_by_user_id(idseller: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     stands = db.query(StandModel).filter(StandModel.idseller == idseller).all()
     if(stands): 
         return stands
@@ -188,16 +191,16 @@ def get_categorys(db: Session = Depends(get_db)):
         return stands
     else : 
         return False
-@stand_router.post("/category", status_code=status.HTTP_201_CREATED, response_model=CategoryResponse)
-def add_category(category: Catetory, db: Session= Depends(get_db)):
+@stand_router.post("/protected/category", status_code=status.HTTP_201_CREATED, response_model=CategoryResponse)
+def add_category(category: Catetory, db: Session= Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     new_category = CategoryModel(**category.dict())
     db.add(new_category)
     db.commit()
     db.refresh(new_category)
     db.commit()
     return new_category
-@stand_router.delete("/category", status_code= status.HTTP_200_OK, response_model= bool)
-def delete_category(idcategory: int, db: Session = Depends(get_db)):
+@stand_router.delete("/protected/category", status_code= status.HTTP_200_OK, response_model= bool)
+def delete_category(idcategory: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     category = db.query(CategoryModel).filter(CategoryModel.idcategory == idcategory).first()
     if category :
         db.delete(category)
@@ -227,8 +230,8 @@ def get_stands(idseller:int, db: Session = Depends(get_db)):
         return standSeller
     else:
         return False    
-@stand_router.get("/favorite", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
-def get_favorites(db: Session = Depends(get_db)):
+@stand_router.get("/protected/favorite", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
+def get_favorites(db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     rating = (
         db.query(
             RateModel.idstand,
@@ -268,8 +271,8 @@ def get_favorites(db: Session = Depends(get_db)):
         return favorites
     else:
         return False
-@stand_router.get("/favorite{idbuyer}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
-def get_favorites(idbuyer: int, db: Session = Depends(get_db)):
+@stand_router.get("/protected/favorite{idbuyer}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
+def get_favorites(idbuyer: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     rating = (
         db.query(
             RateModel.idstand,
@@ -309,8 +312,8 @@ def get_favorites(idbuyer: int, db: Session = Depends(get_db)):
         return favorites
     else:
         return False    
-@stand_router.get("/favoriteWIthCategory/{category}/{idbuyer}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
-def get_favorites(category: int, idbuyer: int, db: Session = Depends(get_db)):
+@stand_router.get("/protected/favoriteWIthCategory/{category}/{idbuyer}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
+def get_favorites(category: int, idbuyer: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     # Subconsulta para calificaciones
     rating = (
         db.query(
@@ -354,8 +357,8 @@ def get_favorites(category: int, idbuyer: int, db: Session = Depends(get_db)):
         return favorites
     else:
         return False
-@stand_router.get("/Allfavorites/{idbuyer}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
-def get_favorites(idbuyer: int, db: Session = Depends(get_db)):
+@stand_router.get("/protected/Allfavorites/{idbuyer}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
+def get_favorites(idbuyer: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     # Subconsulta para calificaciones
     rating = (
         db.query(
@@ -399,7 +402,7 @@ def get_favorites(idbuyer: int, db: Session = Depends(get_db)):
     else:
         return False        
 @stand_router.get("/favoriteByIdStand/{idbuyer}/{idstand}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
-def get_favorites(idbuyer: int, idstand: int, db: Session = Depends(get_db)):
+def get_favorites(idbuyer: int, idstand: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     # Subconsulta para calificaciones
     rating = (
         db.query(
@@ -443,8 +446,8 @@ def get_favorites(idbuyer: int, idstand: int, db: Session = Depends(get_db)):
         return favorites
     else:
         return False            
-@stand_router.get("/favoriteWIthName/{name}/{idbuyer}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
-def get_favorites(name: str, idbuyer: int, db: Session = Depends(get_db)):
+@stand_router.get("/protected/favoriteWIthName/{name}/{idbuyer}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
+def get_favorites(name: str, idbuyer: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     rating = (
         db.query(
             RateModel.idstand,
@@ -484,8 +487,8 @@ def get_favorites(name: str, idbuyer: int, db: Session = Depends(get_db)):
         return favorites
     else:
         return False        
-@stand_router.get("/standWithRating/{idstand}", status_code=status.HTTP_200_OK, response_model=StandFavoriteResponse | bool)
-def get_favorites_byId(idstand: int, db: Session = Depends(get_db)):
+@stand_router.get("/protected/standWithRating/{idstand}", status_code=status.HTTP_200_OK, response_model=StandFavoriteResponse | bool)
+def get_favorites_byId(idstand: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     rating = (
         db.query(
             RateModel.idstand,
@@ -525,14 +528,14 @@ def get_favorites_byId(idstand: int, db: Session = Depends(get_db)):
     else:
         return False
     
-@stand_router.get("/favoritebyId/{iduser}/{idstand}", status_code=status.HTTP_200_OK, response_model= FavoriteResponse | bool)
-def get_favorite_byId(iduser: int, idstand: int, db: Session= Depends(get_db)): 
+@stand_router.get("/protected/favoritebyId/{iduser}/{idstand}", status_code=status.HTTP_200_OK, response_model= FavoriteResponse | bool)
+def get_favorite_byId(iduser: int, idstand: int, db: Session= Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)): 
             favorite = db.query(Favorite).filter(Favorite.iduser == iduser).filter(Favorite.idstand == idstand).first()
             if(favorite): 
                 return favorite
             else: 
                 return False
-@stand_router.get("/stand/seller/{idseller}/{search_term}", status_code=status.HTTP_200_OK, response_model=List[StandResponse] | bool)
+@stand_router.get("/protected/stand/seller/{idseller}/{search_term}", status_code=status.HTTP_200_OK, response_model=List[StandResponse] | bool)
 def get_stand_by_user_id(idseller: int, search_term: str, db: Session = Depends(get_db)):
     stands = db.query(StandModel).filter(
         StandModel.idseller == idseller,

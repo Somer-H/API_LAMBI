@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import  HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 import jwt
 from fastapi.responses import JSONResponse
@@ -13,9 +14,12 @@ from models.favorite import Favorite
 from schemas.stand import StandFavoriteResponse
 from models.stand import Stand
 buyer_router = APIRouter()
-
-SECRET_KEY = "LAPUERTADELAMBI"
-ALGORITHM = "HS256"
+from dotenv import load_dotenv
+import os 
+load_dotenv()
+bearer_scheme = HTTPBearer()
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 @buyer_router.post("/registerBuyer/", response_model=BuyerResponseGet)
 async def register_buyer(buyer: BuyerCreate, db: Session = Depends(get_db)):
     try:
@@ -99,8 +103,8 @@ async def login_buyer(buyer: BuyerLogin, db: Session = Depends(get_db)):
     return response
 
 
-@buyer_router.put("/updateBuyer/{idbuyer}", response_model=BuyerUpdateResponse)
-async def update_buyer(idbuyer: int, buyer: BuyerUpdate, db: Session = Depends(get_db)):
+@buyer_router.put("/protected/updateBuyer/{idbuyer}", response_model=BuyerUpdateResponse)
+async def update_buyer(idbuyer: int, buyer: BuyerUpdate, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     db_buyer = db.query(BuyerModel).filter(BuyerModel.iduser == idbuyer).first()
     if not db_buyer:
         raise HTTPException(status_code=404, detail="Buyer not found")
@@ -114,8 +118,8 @@ async def update_buyer(idbuyer: int, buyer: BuyerUpdate, db: Session = Depends(g
     
     return response
 
-@buyer_router.delete("/deleteBuyer/{idbuyer}", response_model=BuyerUpdateResponse)
-async def delete_buyer(idbuyer: int, db: Session = Depends(get_db)):
+@buyer_router.delete("/protected/deleteBuyer/{idbuyer}", response_model=BuyerUpdateResponse)
+async def delete_buyer(idbuyer: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     db_buyer = db.query(BuyerModel).filter(BuyerModel.iduser == idbuyer).first()
     if not db_buyer:
         raise HTTPException(status_code=404, detail="Buyer not found")
@@ -125,8 +129,8 @@ async def delete_buyer(idbuyer: int, db: Session = Depends(get_db)):
     response = BuyerUpdateResponse(idbuyer=db_buyer.iduser, name=db_buyer.name, lastname=db_buyer.lastname)
     
     return response
-@buyer_router.post("/favorites", status_code=status.HTTP_200_OK, response_model=FavoriteResponse)
-def addFavorite(favorite: FavoriteBase, db: Session = Depends(get_db)):
+@buyer_router.post("/protected/favorites", status_code=status.HTTP_200_OK, response_model=FavoriteResponse)
+def addFavorite(favorite: FavoriteBase, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     try: 
         newFavorite = Favorite(**favorite.dict())
         newFavorite.status = True
@@ -140,8 +144,8 @@ def addFavorite(favorite: FavoriteBase, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error adding favorite: {str(e)}")
-@buyer_router.put("/changeToFalse/favorite/{iduser}/{idstand}", status_code=status.HTTP_200_OK, response_model=bool)
-def delete_favorite(iduser: int, idstand: int, db: Session = Depends(get_db)):
+@buyer_router.put("/protected/changeToFalse/favorite/{iduser}/{idstand}", status_code=status.HTTP_200_OK, response_model=bool)
+def delete_favorite(iduser: int, idstand: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     favorite_search = db.query(Favorite).filter(Favorite.iduser==iduser).filter(Favorite.idstand==idstand).first()
     if(favorite_search):
         favorite_search.status= False
@@ -150,8 +154,8 @@ def delete_favorite(iduser: int, idstand: int, db: Session = Depends(get_db)):
         return True
     else: 
         return False    
-@buyer_router.put("/changeToTrue/favorite/{iduser}/{idstand}", status_code=status.HTTP_200_OK, response_model=bool)
-def recuperate_favorite(iduser: int, idstand: int, db: Session = Depends(get_db)):
+@buyer_router.put("/protected/changeToTrue/favorite/{iduser}/{idstand}", status_code=status.HTTP_200_OK, response_model=bool)
+def recuperate_favorite(iduser: int, idstand: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     favorite_search = db.query(Favorite).filter(Favorite.iduser==iduser).filter(Favorite.idstand==idstand).first()
     if(favorite_search):
         favorite_search.status= True
@@ -160,8 +164,8 @@ def recuperate_favorite(iduser: int, idstand: int, db: Session = Depends(get_db)
         return True
     else: 
         return False    
-@buyer_router.post("/rate", status_code=status.HTTP_201_CREATED, response_model=RateBase | bool)
-def add_rate(rate : RateBase, db: Session = Depends(get_db)): 
+@buyer_router.post("/protected/rate", status_code=status.HTTP_201_CREATED, response_model=RateBase | bool)
+def add_rate(rate : RateBase, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)): 
     new_rate = RateModel(**rate.dict())
     if(new_rate.stars > 5 or new_rate.stars < 0):
         raise HTTPException(status_code=400, detail="Solo puede añadir de 1 a 5 estrellas")
@@ -169,8 +173,8 @@ def add_rate(rate : RateBase, db: Session = Depends(get_db)):
      db.add(new_rate)
      db.commit()
      return new_rate
-@buyer_router.put("/rate", status_code = status.HTTP_200_OK, response_model=RateBase | bool)
-def update_rate(idstand: int, idbuyer: int, rate: RateUpdate,db: Session = Depends(get_db)): 
+@buyer_router.put("/protected/rate", status_code = status.HTTP_200_OK, response_model=RateBase | bool)
+def update_rate(idstand: int, idbuyer: int, rate: RateUpdate,db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)): 
     rate_search = db.query(RateModel).filter(RateModel.idstand ==idstand). filter(RateModel.idbuyer == idbuyer).first()
     if(rate_search):
         rate_search.stars = rate.stars

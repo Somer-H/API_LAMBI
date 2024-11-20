@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form
 from sqlalchemy.orm import Session
+from fastapi.security import  HTTPAuthorizationCredentials, HTTPBearer
 from schemas.products import Product,ProductBase,ProductCreate,ProductUpdate
 from models.products import Product as ProductModel
 from datetime import datetime,timedelta
@@ -10,6 +11,7 @@ from botocore.exceptions import NoCredentialsError, ClientError
 from databasecontent.database import engine, get_db, Base
 import os
 from dotenv import load_dotenv
+bearer_scheme = HTTPBearer()
 load_dotenv()
 product_router = APIRouter()
 
@@ -54,8 +56,8 @@ def upload_images_to_s3(image_files: List[UploadFile], bucket_name: str) -> List
     return uploaded_urls
 
 
-@product_router.post("/products/", response_model=Product)
-async def create_product(name: str = Form(...),description: str = Form(...),price: float = Form(...), amount: int = Form(...), category: int = Form(...), image: Optional[List[UploadFile]] = File(...), standid:int = Form(...), db: Session = Depends(get_db)):
+@product_router.post("/protected/products/", response_model=Product)
+async def create_product(name: str = Form(...),description: str = Form(...),price: float = Form(...), amount: int = Form(...), category: int = Form(...), image: Optional[List[UploadFile]] = File(...), standid:int = Form(...), db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     try:
         print(f"Received image files: {image}")  # Log para ver las imágenes recibidas
         
@@ -91,8 +93,8 @@ async def create_product(name: str = Form(...),description: str = Form(...),pric
     except Exception as e:
         print("Error durante el registro del producto:", e)  # Log para ver el error exacto
         raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.")
-@product_router.get("/products/", response_model=List[Product])
-async def get_products(db: Session = Depends(get_db)):
+@product_router.get("/protected/products/", response_model=List[Product])
+async def get_products(db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     return db.query(ProductModel).all()
 
 @product_router.get("/products/{product_id}", response_model=Product)
@@ -102,8 +104,8 @@ async def get_product_by_id(product_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Product not found")
     return product
 
-@product_router.put("/products/{product_id}", response_model=Product)
-async def update_product(product_id: Optional[int], name: Optional[str] = Form(None),description: str = Form(None),price: Optional[float] = Form(None), amount: Optional[int] = Form(None), category: Optional[int] = Form(None), image: Optional[List[UploadFile]] = File(None), db: Session = Depends(get_db)):
+@product_router.put("/protected/products/{product_id}", response_model=Product)
+async def update_product(product_id: Optional[int], name: Optional[str] = Form(None),description: str = Form(None),price: Optional[float] = Form(None), amount: Optional[int] = Form(None), category: Optional[int] = Form(None), image: Optional[List[UploadFile]] = File(None), db: Session = Depends(get_db),authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     product_to_update = db.query(ProductModel).filter(ProductModel.idproduct == product_id).first()
     if not product_to_update:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -124,8 +126,8 @@ async def update_product(product_id: Optional[int], name: Optional[str] = Form(N
     return product_to_update
 
 
-@product_router.delete("/products", response_model=Product)
-async def delete_product(product_id: int, db: Session = Depends(get_db)):
+@product_router.delete("/protected/products", response_model=Product)
+async def delete_product(product_id: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     product_to_delete = db.query(ProductModel).filter(ProductModel.idproduct == product_id).first()
     if not product_to_delete:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -155,8 +157,8 @@ async def get_products_by_category(category: int, db: Session = Depends(get_db))
         raise HTTPException(status_code=404, detail="No products found in the specified category.")
     return products
 
-@product_router.get("/products/seller/{seller_id}", response_model=List[Product])
-async def get_products_by_seller(seller_id: int, db: Session = Depends(get_db)):
+@product_router.get("/protected/products/seller/{seller_id}", response_model=List[Product])
+async def get_products_by_seller(seller_id: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     products = db.query(ProductModel).filter(ProductModel.sellerid == seller_id).all()
     if not products:
         raise HTTPException(status_code=404, detail="No products found by the specified seller.")

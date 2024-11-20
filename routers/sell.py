@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException,status
 from sqlalchemy.orm import Session
+from fastapi.security import  HTTPAuthorizationCredentials, HTTPBearer
 from databasecontent.database import get_db
 from typing import List
 from models.sell import SellModel, SellProduct as SellProductModel
 from schemas.sell import SellProductResponse, UpdateSell, SellProduct, SellRequest, SellResponse
 from models.products import Product
 sell_router = APIRouter()
-@sell_router.post("/sell", status_code=status.HTTP_201_CREATED, response_model=SellProductResponse)
-def create_sell(sell: SellRequest, db: Session = Depends(get_db)):
+bearer_scheme = HTTPBearer()
+@sell_router.post("/protected/sell", status_code=status.HTTP_201_CREATED, response_model=SellProductResponse)
+def create_sell(sell: SellRequest, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     try:
         all_products = db.query(Product).all()
         products_dict = {product.idproduct: product for product in all_products}
@@ -59,12 +61,12 @@ def create_sell(sell: SellRequest, db: Session = Depends(get_db)):
     except Exception as e:
         print("Error durante el registro del producto:", e)
         raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.")
-@sell_router.get("/sell", status_code=status.HTTP_200_OK, response_model=List[SellResponse])
-def get_sell(db: Session = Depends(get_db)):
+@sell_router.get("/protected/sell", status_code=status.HTTP_200_OK, response_model=List[SellResponse])
+def get_sell(db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
      all_sells = db.query(SellModel).all()
      return all_sells  
-@sell_router.put("/sell/{idsell}", status_code=status.HTTP_201_CREATED, response_model=SellResponse | bool)
-def put_sell(idsell: int, sell_update: UpdateSell, db: Session = Depends(get_db)):
+@sell_router.put("/protected/sell/{idsell}", status_code=status.HTTP_201_CREATED, response_model=SellResponse | bool)
+def put_sell(idsell: int, sell_update: UpdateSell, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     sell = db.query(SellModel).filter(SellModel.idsell == idsell).first()
     if not sell:
         raise HTTPException(status_code=404, detail="Seller not found")
@@ -86,8 +88,8 @@ def put_sell(idsell: int, sell_update: UpdateSell, db: Session = Depends(get_db)
         except Exception as e:
             db.rollback()
             return sell
-@sell_router.delete("/sell/{idsell}", status_code=status.HTTP_200_OK, response_model= bool)
-def delete_sell(idsell: int, db: Session = Depends(get_db)):
+@sell_router.delete("/protected/sell/{idsell}", status_code=status.HTTP_200_OK, response_model= bool)
+def delete_sell(idsell: int, db: Session = Depends(get_db),  authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     sell = db.query(SellModel).filter(SellModel.idsell == idsell).first()
     if sell :
        db.delete(sell)
@@ -95,15 +97,15 @@ def delete_sell(idsell: int, db: Session = Depends(get_db)):
        return True
     else :
         return False        
-@sell_router.get("/sell/{idsell}", status_code=status.HTTP_200_OK, response_model=SellResponse | bool)
-def get_sell_byId(idsell: int, db: Session = Depends(get_db)): 
+@sell_router.get("/protected/sell/{idsell}", status_code=status.HTTP_200_OK, response_model=SellResponse | bool)
+def get_sell_byId(idsell: int, db: Session = Depends(get_db),  authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)): 
     sell = db.query(SellModel).filter(SellModel.idsell == idsell).first()
     if(sell): 
         return sell
     else: 
         return False
-@sell_router.post("/sellProduct", status_code = status.HTTP_201_CREATED, response_model= SellProduct)
-def add_sell_product(sell: SellProduct, db: Session = Depends(get_db)): 
+@sell_router.post("/protected/sellProduct", status_code = status.HTTP_201_CREATED, response_model= SellProduct)
+def add_sell_product(sell: SellProduct, db: Session = Depends(get_db),  authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)): 
     try:
      new_sell = SellModel(**sell.dict())
      db.add(new_sell)
