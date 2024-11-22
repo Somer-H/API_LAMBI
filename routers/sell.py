@@ -17,7 +17,7 @@ def create_sell(sell: SellRequest, db: Session = Depends(get_db), authorization:
             hour=sell.hour,
             date=sell.date,
             description=sell.description,
-            sellerid=sell.sellerid,
+            standid_fk=sell.standid_fk,
             idbuyer=sell.idbuyer
         )
         db.add(new_sell)

@@ -105,7 +105,7 @@ async def get_product_by_id(product_id: int, db: Session = Depends(get_db)):
     return product
 
 @product_router.put("/protected/products/{product_id}", response_model=Product)
-async def update_product(product_id: Optional[int], name: Optional[str] = Form(None),description: str = Form(None),price: Optional[float] = Form(None), amount: Optional[int] = Form(None), category: Optional[int] = Form(None), image: Optional[List[UploadFile]] = File(None), db: Session = Depends(get_db),authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+async def update_product(product_id: int, name: Optional[str] = Form(None),description: str = Form(None),price: Optional[float] = Form(None), amount: Optional[int] = Form(None), category: Optional[int] = Form(None), image: Optional[List[UploadFile]] = File(None), db: Session = Depends(get_db),authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     product_to_update = db.query(ProductModel).filter(ProductModel.idproduct == product_id).first()
     if not product_to_update:
         raise HTTPException(status_code=404, detail="Product not found")
