@@ -53,8 +53,8 @@ def get_all_users(db: Session = Depends(get_db)):
         print(f'ID: {seller.iduser}, Nombre: {seller.name}, Lastaname: {seller.lastname}, E_mail: {seller.e_mail}, Password: {seller.password}')
     return all_sellers
 
-@app.post('/protected/sellers', status_code=status.HTTP_201_CREATED, response_model=SellerResponse)
-def create_user(post_user: SellerRequest, db: Session = Depends(get_db),  authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+@app.post('/sellers', status_code=status.HTTP_201_CREATED, response_model=SellerResponse)
+def create_user(post_user: SellerRequest, db: Session = Depends(get_db)):
     try:
         # Crear un hash de la contraseña
         hashed_password = bcrypt.hashpw(post_user.password.encode('utf-8'), bcrypt.gensalt())

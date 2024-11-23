@@ -230,8 +230,8 @@ def get_stands(idseller:int, db: Session = Depends(get_db)):
         return standSeller
     else:
         return False    
-@stand_router.get("/protected/favorite", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
-def get_favorites(db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+@stand_router.get("/favorite", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
+def get_favorites(db: Session = Depends(get_db)):
     rating = (
         db.query(
             RateModel.idstand,
@@ -402,7 +402,7 @@ def get_favorites(idbuyer: int, db: Session = Depends(get_db), authorization: HT
     else:
         return False        
 @stand_router.get("/favoriteByIdStand/{idbuyer}/{idstand}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
-def get_favorites(idbuyer: int, idstand: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+def get_favorites(idbuyer: int, idstand: int, db: Session = Depends(get_db)):
     # Subconsulta para calificaciones
     rating = (
         db.query(

@@ -138,7 +138,6 @@ def addFavorite(favorite: FavoriteBase, db: Session = Depends(get_db), authoriza
         db.add(newFavorite)
         db.commit()
         db.refresh(newFavorite)
-
         print(newFavorite)  # Verificar todos los campos
         return newFavorite
     except Exception as e:
