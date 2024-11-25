@@ -76,7 +76,7 @@ async def create_product(name: str = Form(...),description: str = Form(...),pric
             price=price,
             amount=amount,
             category=category,
-            image=image_urls,  # Guardar las URLs de las imágenes
+            image=image_urls, 
             standid=standid
         )
         
@@ -119,6 +119,8 @@ async def update_product(product_id: int, product_update: ProductUpdate, db: Ses
         product_to_update.amount = product_update.amount
     if product_update.category is not None:
         product_to_update.category = product_update.category  
+    if product_to_update.image is not None: 
+        product_to_update.image = product_update.image
     db.commit()
     db.refresh(product_to_update)
     return product_to_update
