@@ -15,6 +15,6 @@ class SellModel(Base):
 
 class SellProduct(Base): 
      __tablename__ = "sellproduct"
-     idsell = Column(Integer, ForeignKey('stand.idstand'),primary_key=True, nullable=True)
+     idsell = Column(Integer, ForeignKey('sell.idsell'),primary_key=True, nullable=True)
      idproduct = Column(Integer, ForeignKey('product.idproduct'),primary_key=True, nullable = True)
      amount = Column(Integer, nullable = True)

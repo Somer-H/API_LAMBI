@@ -1,9 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-
-#SQLALCHEMY_DATABASE_URL = 'postgresql://postgres:postgres@localhost/cuarto_b'
-SQLALCHEMY_DATABASE_URL = 'postgresql://postgres:170805somUP1917@lambidb.ca9qg8g6sjuk.us-east-1.rds.amazonaws.com:5432/LAMBIDB'
+import os
+from dotenv import load_dotenv
+load_dotenv()
+SQLALCHEMY_DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
