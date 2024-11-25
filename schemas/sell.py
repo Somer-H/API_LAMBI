@@ -13,6 +13,21 @@ class SellProduct(BaseModel):
     idsell: int 
     idproduct: int  
     amount: int
+class SellProductResponseNow(BaseModel):
+    idsell: int
+    idproduct: int  
+    amount: int
+    date: str
+    sell_description: str
+    hour: str
+    idbuyer: int
+    standid_fk: int
+    category: int
+    name : str 
+    product_description: str
+    image: List[Optional[str]] = None
+    price: float
+    total_price: float
 class SellProductRequest(BaseModel):
     idproduct: int
     amount: int

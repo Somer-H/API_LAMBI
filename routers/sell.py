@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException,status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from fastapi.security import  HTTPAuthorizationCredentials, HTTPBearer
 from databasecontent.database import get_db
 from typing import List
 from models.sell import SellModel, SellProduct as SellProductModel
-from schemas.sell import SellProductResponse, UpdateSell, SellProduct, SellRequest, SellResponse
+from schemas.sell import SellProductResponse, UpdateSell, SellProduct, SellRequest, SellResponse, SellProductResponseNow
 from models.products import Product
 sell_router = APIRouter()
 bearer_scheme = HTTPBearer()
@@ -61,10 +62,63 @@ def create_sell(sell: SellRequest, db: Session = Depends(get_db), authorization:
     except Exception as e:
         print("Error durante el registro del producto:", e)
         raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.")
-@sell_router.get("/protected/sell", status_code=status.HTTP_200_OK, response_model=List[SellResponse])
-def get_sell(db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
-     all_sells = db.query(SellModel).all()
-     return all_sells  
+@sell_router.get("/sell/products/{standid_fk}", response_model=List[SellProductResponseNow])
+async def get_sell_details_by_stand(standid_fk: int, db: Session = Depends(get_db)):
+    try:
+        query = (
+            db.query(
+                SellModel.idsell,
+                SellModel.date,
+                SellModel.description.label("sell_description"),
+                SellModel.hour,
+                SellModel.idbuyer,
+                SellModel.standid_fk,
+                Product.category,
+                Product.description.label("product_description"),
+                Product.image,
+                Product.name,
+                Product.price,
+                SellProductModel.idproduct,
+                SellProductModel.amount,
+                (Product.price * SellProductModel.amount).label("total_price")
+            )
+            .join(SellProductModel, SellModel.idsell == SellProductModel.idsell)
+            .join(Product, Product.idproduct == SellProductModel.idproduct)
+            .filter(SellModel.standid_fk == standid_fk)
+            .all()  
+        )
+        lista_mutable = query
+        result = []
+
+        for product in lista_mutable:
+               total_price = 0
+               for productTwo in lista_mutable:
+                 if product.idsell == productTwo.idsell:  # Compara por idsell (venta)
+                  total_price += productTwo.total_price
+
+    # Creamos un nuevo diccionario o instancia para cada producto con el total calculado
+               result.append({
+        "idsell": product.idsell,
+        "idproduct": product.idproduct,
+        "amount": product.amount,
+        "date": product.date,
+        "sell_description": product.sell_description,
+        "hour": product.hour,
+        "idbuyer": product.idbuyer,
+        "standid_fk": product.standid_fk,
+        "category": product.category,
+        "name": product.name,
+        "product_description": product.product_description,
+        "image": product.image or [],
+        "price": product.price,
+        "total_price": total_price,  # Asignamos el total calculado
+    })
+
+        if not query:
+            raise HTTPException(status_code=404, detail="No sales found for the specified stand.")
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching data: {str(e)}")
 @sell_router.put("/protected/sell/{idsell}", status_code=status.HTTP_201_CREATED, response_model=SellResponse | bool)
 def put_sell(idsell: int, sell_update: UpdateSell, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     sell = db.query(SellModel).filter(SellModel.idsell == idsell).first()
