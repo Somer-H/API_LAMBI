@@ -175,3 +175,27 @@ def get_products_with_stand_id(standid: int, db: Session = Depends(get_db)):
     if not products:
         raise HTTPException(status_code=404, detail="No products found in the specified stand.")
     return products
+@product_router.put("/protected/products/{product_id}/images", response_model=Product)
+async def update_product_images(
+    product_id: int, 
+    image: Optional[List[UploadFile]] = File(None), 
+    db: Session = Depends(get_db),
+    authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+):
+    # Buscar el producto
+    product_to_update = db.query(ProductModel).filter(ProductModel.idproduct == product_id).first()
+
+    if not product_to_update:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # Si se proporcionaron imágenes, las subimos a S3
+    if image:
+        image_urls = upload_images_to_s3(image, S3_BUCKET_NAME)
+        print(f"New image URLs: {image_urls}")
+        product_to_update.image = image_urls  # Actualizamos las URLs de las imágenes
+
+    # Guardamos los cambios en la base de datos
+    db.commit()
+    db.refresh(product_to_update)
+
+    return product_to_update

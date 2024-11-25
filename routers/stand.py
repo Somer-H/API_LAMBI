@@ -271,6 +271,44 @@ def get_favorites(db: Session = Depends(get_db)):
         return favorites
     else:
         return False
+@stand_router.get("/favorite/withRatingOnly", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
+def get_favorites(db: Session = Depends(get_db)):
+    rating = (
+        db.query(
+            RateModel.idstand,
+            func.avg(RateModel.stars).label("rating")
+        )
+        .group_by(RateModel.idstand)
+        .subquery()
+    )
+    favorites = (
+        db.query(
+            StandModel.idstand,
+            StandModel.name,
+            StandModel.description,
+            StandModel.idseller,
+            StandModel.street,
+            StandModel.no_house,
+            StandModel.colonia,
+            StandModel.municipio,
+            StandModel.estado,
+            StandModel.image,
+            StandModel.category,
+            StandModel.horario,
+            StandModel.phone,
+            StandModel.altitud,
+            StandModel.latitud,
+            rating.c.rating
+            #.c es para acceder a la columna, ya que el .group_by me lo guarda todo como si de una tabla se tratase
+        )
+        .outerjoin(rating, StandModel.idstand == rating.c.idstand)
+        .all()
+    )
+
+    if favorites:
+        return favorites
+    else:
+        return False    
 @stand_router.get("/protected/favorite{idbuyer}", status_code=status.HTTP_200_OK, response_model=List[StandFavoriteResponse] | bool)
 def get_favorites(idbuyer: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     rating = (
