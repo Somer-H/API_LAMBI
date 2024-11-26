@@ -21,7 +21,6 @@ AWS_SESSION_TOKEN = os.getenv("AWS_SESSION_TOKEN")
 AWS_REGION_NAME = os.getenv("AWS_REGION_NAME")
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 
-# Función para subir imágenes a S3
 def upload_images_to_s3(image_files: List[UploadFile], bucket_name: str) -> List[str]:
     s3_client = boto3.client(
         "s3",
@@ -59,9 +58,7 @@ def upload_images_to_s3(image_files: List[UploadFile], bucket_name: str) -> List
 @product_router.post("/protected/products/", response_model=Product)
 async def create_product(name: str = Form(...),description: str = Form(...),price: float = Form(...), amount: int = Form(...), category: int = Form(...), image: Optional[List[UploadFile]] = File(...), standid:int = Form(...), db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     try:
-        print(f"Received image files: {image}")  # Log para ver las imágenes recibidas
-        
-        # Si se han enviado imágenes, subimos a S3
+        print(f"Received image files: {image}") 
         image_urls = []
         if image:
             image_urls = upload_images_to_s3(image, S3_BUCKET_NAME)
@@ -79,8 +76,6 @@ async def create_product(name: str = Form(...),description: str = Form(...),pric
             image=image_urls, 
             standid=standid
         )
-        
-        # Guardar en la base de datos
         db.add(new_product)
         db.commit()
         db.refresh(new_product)
@@ -91,7 +86,7 @@ async def create_product(name: str = Form(...),description: str = Form(...),pric
         raise e
     
     except Exception as e:
-        print("Error durante el registro del producto:", e)  # Log para ver el error exacto
+        print("Error durante el registro del producto:", e) 
         raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.",  error = e)
 @product_router.get("/protected/products/", response_model=List[Product])
 async def get_products(db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):

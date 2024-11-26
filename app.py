@@ -28,14 +28,11 @@ ALGORITHM = "HS256"
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:4200", 
-        "http://52.72.44.45:8000"  
-    ],
+    allow_origins=["http://localhost:4200"],
     allow_credentials=True,
-    allow_methods=["*"], 
-    allow_headers=["*"],  
-    expose_headers=["Authorization"]  
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],  # Exponer cualquier cabecera personalizada
 )
 app.add_middleware(JWTMiddleware)
 app.include_router(buyer_router, prefix="/api", tags=["users"])
