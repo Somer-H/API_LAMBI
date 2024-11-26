@@ -167,9 +167,9 @@ async def get_products_by_category(category: int, db: Session = Depends(get_db))
         raise HTTPException(status_code=404, detail="No products found in the specified category.")
     return products
 
-@product_router.get("/protected/products/seller/{seller_id}", response_model=List[Product])
-async def get_products_by_seller(seller_id: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
-    products = db.query(ProductModel).filter(ProductModel.sellerid == seller_id).all()
+@product_router.get("/protected/products/seller/{stand_id}", response_model=List[Product])
+async def get_products_by_seller(stand_id: int, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+    products = db.query(ProductModel).filter(ProductModel.standid == stand_id).all()
     if not products:
         raise HTTPException(status_code=404, detail="No products found by the specified seller.")
     return products
