@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ARRAY
+from sqlalchemy import Column, Integer, String, Float, ARRAY, ForeignKey
 from databasecontent.database import Base 
 
 class Product(Base):
@@ -11,7 +11,7 @@ class Product(Base):
     amount = Column(Integer, nullable=True)
     category = Column(Integer, nullable=True)
     image = Column(ARRAY(String), nullable=True)
-    standid = Column(Integer, nullable=False)
+    standid = Column(Integer,ForeignKey('stand.idstand'), nullable=False)
 class CategoryBase(Base): 
     __tablename__ = "CategoryProduct"
     idcategoryproduct = Column(Integer, primary_key=True, nullable=False)
