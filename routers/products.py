@@ -202,4 +202,8 @@ async def add_images_to_product(
         product_to_update.image.extend(new_image_urls)
         db.commit()
         db.refresh(product_to_update)
-    return product_to_update
+        return product_to_update
+    else :
+        raise HTTPException(status_code=400, detail="No image provided")
+    
+
