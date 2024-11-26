@@ -9,7 +9,7 @@ class Product(Base):
     description = Column(String, nullable=True)
     price = Column(Float, nullable=True)
     amount = Column(Integer, nullable=True)
-    category = Column(Integer, nullable=True)
+    category = Column(Integer,ForeignKey('CategoryProduct.idcategoryproduct'), nullable=True)
     image = Column(ARRAY(String), nullable=True)
     standid = Column(Integer,ForeignKey('stand.idstand'), nullable=False)
 class CategoryBase(Base): 
