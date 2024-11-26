@@ -19,7 +19,7 @@ class JWTMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         if request.url.path.startswith("/api/protected"):
             authorization: str = request.headers.get("Authorization")
-            if not authorization or not authorization.startswith("Bearer "):
+            if not authorization or not authorization.startswith("Bearer"):
                 return JSONResponse(
                     {"detail": "Authorization header missing or invalid"},
                     status_code=401

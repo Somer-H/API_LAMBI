@@ -12,7 +12,6 @@ import bcrypt
 app = FastAPI()
 bearer_scheme = HTTPBearer()
 from middleWare.middleWare import JWTMiddleware  # Ubica tu middleware en un archivo separado
-app.add_middleware(JWTMiddleware)
 from fastapi.middleware.cors import CORSMiddleware
 from routers.buyer import buyer_router
 from routers.products import product_router
@@ -23,7 +22,6 @@ origins = [
     "http://localhost:8000",
     "http://localhost:4200",
     "http://52.72.44.45:8000"
-
 ]
 SECRET_KEY = "LAPUERTADELAMBI"
 ALGORITHM = "HS256"
@@ -39,6 +37,7 @@ app.add_middleware(
     allow_headers=["*"],  
     expose_headers=["Authorization"]  
 )
+app.add_middleware(JWTMiddleware)
 app.include_router(buyer_router, prefix="/api", tags=["users"])
 app.include_router(product_router, prefix="/api", tags=["products"])
 app.include_router(stand_router, prefix="/api", tags=["stand"])
