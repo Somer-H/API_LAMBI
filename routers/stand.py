@@ -75,6 +75,7 @@ def create_stand(
     horario: str = Form(...),
     phone: List[str] = Form(...),
     idseller: int = Form(...),
+    send_to_house: bool = Form(...),
     db: Session = Depends(get_db), 
     authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)
 ):
@@ -89,7 +90,7 @@ def create_stand(
         new_stand = StandModel(
             name=name,
             description=description,
-            image=image_urls,  # Recibimos las listas directamente
+            image=image_urls,  
             category=category,
             street=street,
             no_house=no_house,
@@ -99,8 +100,9 @@ def create_stand(
             latitud=latitud,
             altitud=altitud,
             horario=horario,
-            phone=phone,  # Recibimos las listas directamente
-            idseller=idseller
+            phone=phone,  
+            idseller=idseller,
+            send_to_house= send_to_house  
         )
 
         # Agregar el nuevo stand a la base de datos
@@ -145,7 +147,9 @@ def put_stand(idstand: int, stand_update: StandUpdateRequest, db: Session = Depe
     if stand_update.horario is not None: 
         stand.horario = stand_update.horario
     if stand_update.image is not None:
-        stand.image = stand_update.image         
+        stand.image = stand_update.image 
+    if stand_update.send_to_house is not None:
+        stand.send_to_house = stand_update.send_to_house        
     if updated:
         try:
             db.commit()

@@ -28,6 +28,7 @@ class StandSellerResponse(BaseModel):
     category: int
     seller_name: str
     seller_lastname: str
+    send_to_house: bool
 class StandBase(BaseModel):
     name: str
     description: str
@@ -43,6 +44,7 @@ class StandBase(BaseModel):
     horario: str
     phone: List[str]
     idseller: int
+    send_to_house: bool
     class Config:
         orm_mode = True
 class StandFavoriteResponse(BaseModel): 
@@ -64,6 +66,7 @@ class StandFavoriteResponse(BaseModel):
     favorite_user: Optional[int] = None
     favorite_status: Optional[bool] = None
     rating : Optional[float] = None
+    send_to_house: bool 
     class Config:
         orm_mode = True
 class StandUpdateRequest(BaseModel):
@@ -78,7 +81,8 @@ class StandUpdateRequest(BaseModel):
     estado: Optional[str] = None 
     latitud: Optional[float]= None 
     altitud: Optional[float] = None
-    horario: Optional[str] = None 
+    horario: Optional[str] = None
+    send_to_house: Optional[bool] = None
 class StandCreate(StandBase):
     pass
 class StandResponse(StandBase):

@@ -35,8 +35,6 @@ def create_sell(sell: SellRequest, db: Session = Depends(get_db), authorization:
             )
             db.add(sellProduct)
             inserted_sells["sells"].append(sellProduct)
-            
-            # Obtener el producto usando el diccionario
             product = products_dict.get(sellProductInsert.idproduct)
             if product:
                 if(product.amount<sellProductInsert.amount):
@@ -51,11 +49,10 @@ def create_sell(sell: SellRequest, db: Session = Depends(get_db), authorization:
                 db.delete(new_sell)
                 db.commit()
                 raise HTTPException(status_code=400, detail= "Este producto no se encontró")
+        new_sell.total_price = total_price
         db.commit()
         for product in inserted_sells["sells"]:
             db.refresh(product)
-        inserted_sells["total_price"] = total_price
-
         return inserted_sells
     except HTTPException as e:
         raise e
@@ -80,43 +77,16 @@ async def get_sell_details_by_stand(standid_fk: int, db: Session = Depends(get_d
                 Product.price,
                 SellProductModel.idproduct,
                 SellProductModel.amount,
-                (Product.price * SellProductModel.amount).label("total_price")
+                SellModel.total_price
             )
             .join(SellProductModel, SellModel.idsell == SellProductModel.idsell)
             .join(Product, Product.idproduct == SellProductModel.idproduct)
             .filter(SellModel.standid_fk == standid_fk)
             .all()  
         )
-        lista_mutable = query
-        result = []
-
-        for product in lista_mutable:
-               total_price = 0
-               for productTwo in lista_mutable:
-                 if product.idsell == productTwo.idsell:  # Compara por idsell (venta)
-                  total_price += productTwo.total_price
-
-    # Creamos un nuevo diccionario o instancia para cada producto con el total calculado
-               result.append({
-        "idsell": product.idsell,
-        "idproduct": product.idproduct,
-        "amount": product.amount,
-        "date": product.date,
-        "sell_description": product.sell_description,
-        "hour": product.hour,
-        "idbuyer": product.idbuyer,
-        "standid_fk": product.standid_fk,
-        "category": product.category,
-        "name": product.name,
-        "product_description": product.product_description,
-        "image": product.image or [],
-        "price": product.price,
-        "total_price": total_price,  # Asignamos el total calculado
-    })
-
         if not query:
             raise HTTPException(status_code=404, detail="No sales found for the specified stand.")
-        return result
+        return query
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching data: {str(e)}")
 @sell_router.put("/protected/sell/{idsell}", status_code=status.HTTP_201_CREATED, response_model=SellResponse | bool)

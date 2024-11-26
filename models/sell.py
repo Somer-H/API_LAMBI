@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ARRAY,ForeignKey
 from databasecontent.database import Base
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Float
 from databasecontent.database import Base
 
 class SellModel(Base): 
@@ -12,6 +12,7 @@ class SellModel(Base):
      description = Column(String, nullable = True)
      standid_fk = Column(Integer, ForeignKey('Seller.iduser'), nullable=True)
      idbuyer = Column(Integer, ForeignKey('Buyer.iduser'), nullable=True)
+     total_price = Column(Float, nullable = True)
 
 class SellProduct(Base): 
      __tablename__ = "sellproduct"
