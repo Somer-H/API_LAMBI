@@ -92,7 +92,7 @@ async def create_product(name: str = Form(...),description: str = Form(...),pric
     
     except Exception as e:
         print("Error durante el registro del producto:", e)  # Log para ver el error exacto
-        raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.",  error = e)
 @product_router.get("/protected/products/", response_model=List[Product])
 async def get_products(db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     return db.query(ProductModel).all()
