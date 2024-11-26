@@ -199,7 +199,8 @@ async def add_images_to_product(
     if image is not None:
         new_image_urls = upload_images_to_s3(image, S3_BUCKET_NAME)
         print(f"New image URLs: {new_image_urls}")
-        product_to_update.image += new_image_urls
+        product_to_update.image = product_to_update.image + new_image_urls
+        print(product_to_update.image)
         db.commit()
         db.refresh(product_to_update)
         return product_to_update
