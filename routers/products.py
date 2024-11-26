@@ -88,7 +88,7 @@ async def create_product(name: str = Form(...),description: str = Form(...),pric
     except Exception as e:
         print("Error durante el registro del producto:", e) 
         raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.")
-@product_router.post("/protected/categoryProduct", response_model=CategoryProductResponse)
+@product_router.post("/protected/categoryProduct/", response_model=CategoryProductResponse)
 def add_category_product(category_product: CategoryProduct, db:Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     try: 
         new_category_product = CategoryBase(**category_product.dict())
@@ -101,7 +101,7 @@ def add_category_product(category_product: CategoryProduct, db:Session = Depends
     except Exception as e:
         print("Error durante la actualización del producto:", e)
         raise HTTPException(status_code=500, detail="An unexpected error occurred during update.")
-@product_router.get("/protected/products/", response_model=List[Product])
+@product_router.get("/protected/products/get", response_model=List[Product])
 async def get_products(db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     return db.query(ProductModel).all()
 @product_router.get("/protected/categoryProduct/", response_model=List[CategoryProductResponse])
@@ -196,11 +196,10 @@ async def add_images_to_product(
 
     if not product_to_update:
         raise HTTPException(status_code=404, detail="Product not found")
-    if image:
+    if image is not None:
         new_image_urls = upload_images_to_s3(image, S3_BUCKET_NAME)
         print(f"New image URLs: {new_image_urls}")
         product_to_update.image.extend(new_image_urls)
         db.commit()
         db.refresh(product_to_update)
-
     return product_to_update
