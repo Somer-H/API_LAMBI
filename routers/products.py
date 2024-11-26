@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form
 from sqlalchemy.orm import Session
 from fastapi.security import  HTTPAuthorizationCredentials, HTTPBearer
-from schemas.products import Product,ProductBase,ProductCreate,ProductUpdate
-from models.products import Product as ProductModel
+from schemas.products import Product,ProductBase,ProductCreate,ProductUpdate, CategoryProduct, CategoryProductResponse
+from models.products import Product as ProductModel, CategoryBase
 from datetime import datetime,timedelta
 from typing import List, Optional
 import boto3
@@ -88,10 +88,25 @@ async def create_product(name: str = Form(...),description: str = Form(...),pric
     except Exception as e:
         print("Error durante el registro del producto:", e) 
         raise HTTPException(status_code=500, detail="An unexpected error occurred during registration.")
+@product_router.post("/protected/categoryProduct", response_model=CategoryProductResponse)
+def add_category_product(category_product: CategoryProduct, db:Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+    try: 
+        new_category_product = CategoryBase(**category_product.dict())
+        db.add(new_category_product)
+        db.commit()
+        db.refresh(new_category_product)
+        return new_category_product; 
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print("Error durante la actualización del producto:", e)
+        raise HTTPException(status_code=500, detail="An unexpected error occurred during update.")
 @product_router.get("/protected/products/", response_model=List[Product])
 async def get_products(db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     return db.query(ProductModel).all()
-
+@product_router.get("/protected/categoryProduct", response_model=List[CategoryProductResponse])
+def get_category_products(db:Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+    return db.query(CategoryBase).all()
 @product_router.get("/products/{product_id}", response_model=Product)
 async def get_product_by_id(product_id: int, db: Session = Depends(get_db)):
     product = db.query(ProductModel).filter(ProductModel.idproduct == product_id).first()

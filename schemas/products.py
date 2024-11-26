@@ -27,7 +27,11 @@ class Product(ProductBase):
     class Config:
         orm_mode = True
 class CategoryProduct(BaseModel): 
-    idcaregoryproduct: int
+    category: str
+    class Config: 
+        orm_mode = True
+class CategoryProductResponse(BaseModel): 
+    idcategoryproduct: int
     category : str
     class Config: 
         orm_mode = True        
