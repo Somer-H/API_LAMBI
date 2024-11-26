@@ -104,7 +104,7 @@ def add_category_product(category_product: CategoryProduct, db:Session = Depends
 @product_router.get("/protected/products/", response_model=List[Product])
 async def get_products(db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     return db.query(ProductModel).all()
-@product_router.get("/protected/categoryProduct", response_model=List[CategoryProductResponse])
+@product_router.get("/protected/categoryProduct/", response_model=List[CategoryProductResponse])
 def get_category_products(db:Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     return db.query(CategoryBase).all()
 @product_router.get("/products/{product_id}", response_model=Product)
@@ -185,7 +185,7 @@ def get_products_with_stand_id(standid: int, db: Session = Depends(get_db)):
     if not products:
         raise HTTPException(status_code=404, detail="No products found in the specified stand.")
     return products
-@product_router.put("/protected/products/{product_id}/images", response_model=Product)
+@product_router.put("/protected/products/images/{product_id}", response_model=Product)
 async def add_images_to_product(
     product_id: int, 
     image: Optional[List[UploadFile]] = File(None), 
