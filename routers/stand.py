@@ -555,6 +555,7 @@ def get_favorites_byId(idstand: int, db: Session = Depends(get_db), authorizatio
             StandModel.image,
             StandModel.category,
             StandModel.horario,
+            StandModel.send_to_house,
             StandModel.phone,
             StandModel.altitud,
             StandModel.latitud,
