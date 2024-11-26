@@ -216,7 +216,7 @@ def delete_category(idcategory: int, db: Session = Depends(get_db), authorizatio
 def get_stands(db: Session = Depends(get_db)):
     standSeller = db.query(StandModel.idstand, StandModel.name.label("stand_name"), StandModel.description, StandModel.image, StandModel.horario,
                      StandModel.phone, StandModel.idseller, StandModel.street, StandModel.no_house, StandModel.colonia, StandModel.municipio,
-                     StandModel.estado, StandModel.latitud, StandModel.altitud, StandModel.category, 
+                     StandModel.estado, StandModel.latitud, StandModel.altitud, StandModel.category, StandModel.send_to_house,
                      Seller.name.label("seller_name"), Seller.lastname.label("seller_lastname"))\
               .join(Seller, StandModel.idseller == Seller.iduser).all()
     if(standSeller):
@@ -227,7 +227,7 @@ def get_stands(db: Session = Depends(get_db)):
 def get_stands(idseller:int, db: Session = Depends(get_db)):
     standSeller = db.query(StandModel.idstand, StandModel.name.label("stand_name"), StandModel.description, StandModel.image, StandModel.horario,
                      StandModel.phone, StandModel.idseller, StandModel.street, StandModel.no_house, StandModel.colonia, StandModel.municipio,
-                     StandModel.estado, StandModel.latitud, StandModel.altitud, StandModel.category, 
+                     StandModel.estado, StandModel.latitud, StandModel.altitud, StandModel.category, StandModel.send_to_house, 
                      Seller.name.label("seller_name"), Seller.lastname.label("seller_lastname"))\
               .join(Seller, StandModel.idseller == Seller.iduser).filter(StandModel.idseller == idseller).all()
     if(standSeller):
@@ -261,6 +261,7 @@ def get_favorites(db: Session = Depends(get_db)):
             StandModel.phone,
             StandModel.altitud,
             StandModel.latitud,
+            StandModel.send_to_house,
             Favorite.iduser.label("favorite_user"),
             Favorite.status.label("favorite_status"),
             rating.c.rating
@@ -302,6 +303,7 @@ def get_favorites(db: Session = Depends(get_db)):
             StandModel.phone,
             StandModel.altitud,
             StandModel.latitud,
+            StandModel.send_to_house,
             rating.c.rating
             #.c es para acceder a la columna, ya que el .group_by me lo guarda todo como si de una tabla se tratase
         )
@@ -340,6 +342,7 @@ def get_favorites(idbuyer: int, db: Session = Depends(get_db), authorization: HT
             StandModel.phone,
             StandModel.altitud,
             StandModel.latitud,
+            StandModel.send_to_house,
             Favorite.iduser.label("favorite_user"),
             Favorite.status.label("favorite_status"),
             rating.c.rating
@@ -384,6 +387,7 @@ def get_favorites(category: int, idbuyer: int, db: Session = Depends(get_db), au
             StandModel.phone,
             StandModel.altitud,
             StandModel.latitud,
+            StandModel.send_to_house,
             Favorite.iduser.label("favorite_user"),
             Favorite.status.label("favorite_status"),
             rating.c.rating
@@ -429,6 +433,7 @@ def get_favorites(idbuyer: int, db: Session = Depends(get_db), authorization: HT
             StandModel.phone,
             StandModel.altitud,
             StandModel.latitud,
+            StandModel.send_to_house,
             Favorite.iduser.label("favorite_user"),
             Favorite.status.label("favorite_status"),
             rating.c.rating
@@ -473,6 +478,7 @@ def get_favorites(idbuyer: int, idstand: int, db: Session = Depends(get_db)):
             StandModel.phone,
             StandModel.altitud,
             StandModel.latitud,
+            StandModel.send_to_house,
             Favorite.iduser.label("favorite_user"),
             Favorite.status.label("favorite_status"),
             rating.c.rating
@@ -515,6 +521,7 @@ def get_favorites(name: str, idbuyer: int, db: Session = Depends(get_db), author
             StandModel.phone,
             StandModel.altitud,
             StandModel.latitud,
+            StandModel.send_to_house,
             Favorite.iduser.label("favorite_user"),
             Favorite.status.label("favorite_status"),
             rating.c.rating
@@ -559,6 +566,7 @@ def get_favorites_byId(idstand: int, db: Session = Depends(get_db), authorizatio
             StandModel.phone,
             StandModel.altitud,
             StandModel.latitud,
+            StandModel.send_to_house,
             rating.c.rating
             #.c es para acceder a la columna, ya que el .group_by me lo guarda todo como si de una tabla se tratase
         )
