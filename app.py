@@ -26,21 +26,20 @@ origins = [
 SECRET_KEY = "LAPUERTADELAMBI"
 ALGORITHM = "HS256"
 
+
+app.include_router(buyer_router, prefix="/api", tags=["users"])
+app.include_router(product_router, prefix="/api", tags=["products"])
+app.include_router(stand_router, prefix="/api", tags=["stand"])
+app.include_router(sell_router, prefix="/api", tags=["sell"])
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:4200"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],  # Exponer cualquier cabecera personalizada
+    expose_headers=["*"]
 )
 app.add_middleware(JWTMiddleware)
-app.include_router(buyer_router, prefix="/api", tags=["users"])
-app.include_router(product_router, prefix="/api", tags=["products"])
-app.include_router(stand_router, prefix="/api", tags=["stand"])
-app.include_router(sell_router, prefix="/api", tags=["sell"])
-# Añadir CORS
-
 @app.get('/')
 def index():
     return { 'message': 'Server alive!', 'time': datetime.now() }
