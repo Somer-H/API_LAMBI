@@ -10,7 +10,11 @@ from models.products import Product
 sell_router = APIRouter()
 bearer_scheme = HTTPBearer()
 @sell_router.post("/protected/sell", status_code=status.HTTP_201_CREATED, response_model=SellProductResponse)
-def create_sell(sell: SellRequest, db: Session = Depends(get_db), authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+def create_sell(
+    sell: SellRequest,
+    db: Session = Depends(get_db),
+    authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+):
     try:
         all_products = db.query(Product).all()
         products_dict = {product.idproduct: product for product in all_products}
@@ -37,22 +41,30 @@ def create_sell(sell: SellRequest, db: Session = Depends(get_db), authorization:
             inserted_sells["sells"].append(sellProduct)
             product = products_dict.get(sellProductInsert.idproduct)
             if product:
-                if(product.amount<sellProductInsert.amount):
+                if product.amount < sellProductInsert.amount:
                     db.delete(new_sell)
-                    db.commit()  
-                    db.rollback()        
-                    raise HTTPException(status_code=400, detail="La cantidad que intenta ingresar es mayor a la que existe")
-                else: 
+                    db.commit()
+                    db.rollback()
+                    raise HTTPException(
+                        status_code=400,
+                        detail="La cantidad que intenta ingresar es mayor a la que existe"
+                    )
+                else:
                     total_price += product.price * sellProductInsert.amount
             else:
                 db.rollback()
                 db.delete(new_sell)
                 db.commit()
-                raise HTTPException(status_code=400, detail= "Este producto no se encontró")
+                raise HTTPException(
+                    status_code=400,
+                    detail="Este producto no se encontró"
+                )
         new_sell.total_price = total_price
         db.commit()
+        inserted_sells["total_price"] = total_price
         for product in inserted_sells["sells"]:
             db.refresh(product)
+        
         return inserted_sells
     except HTTPException as e:
         raise e

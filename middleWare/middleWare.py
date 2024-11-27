@@ -11,8 +11,6 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 
 app = FastAPI()
-
-# Configuración de seguridad para Swagger UI
 bearer_scheme = HTTPBearer()
 class JWTMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
