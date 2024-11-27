@@ -23,7 +23,8 @@ def create_sell(
             date=sell.date,
             description=sell.description,
             standid_fk=sell.standid_fk,
-            idbuyer=sell.idbuyer
+            idbuyer=sell.idbuyer,
+            direccion_entrega= sell.direccion_entrega
         )
         db.add(new_sell)
         db.commit()  
@@ -89,7 +90,8 @@ async def get_sell_details_by_stand(standid_fk: int, db: Session = Depends(get_d
                 Product.price,
                 SellProductModel.idproduct,
                 SellProductModel.amount,
-                SellModel.total_price
+                SellModel.total_price,
+                SellModel.direccion_entrega
             )
             .join(SellProductModel, SellModel.idsell == SellProductModel.idsell)
             .join(Product, Product.idproduct == SellProductModel.idproduct)
@@ -115,7 +117,10 @@ def put_sell(idsell: int, sell_update: UpdateSell, db: Session = Depends(get_db)
         updated = True
     if sell_update.description is not None:
         sell.description = sell_update.description
-        updated = True       
+        updated = True    
+    if sell_update.direccion_entrega is not None:
+       sell.direccion_entrega = sell_update.direccion_entrega 
+       updated = True  
     if updated:
         try:
             db.commit()
