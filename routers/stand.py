@@ -128,6 +128,9 @@ def put_stand(idstand: int, stand_update: StandUpdateRequest, db: Session = Depe
     if not stand:
         raise HTTPException(status_code=404, detail="Seller not found")
     updated = False
+    if stand_update.name is not None:
+        stand.name = stand_update.name
+        updated = True
     if stand_update.altitud is not None:
         stand.altitud = stand_update.altitud 
         updated = True
