@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException,status, Form,File, UploadF
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_, and_
 from databasecontent.database import get_db
-from typing import List
+from typing import List, Optional
 from fastapi.security import  HTTPAuthorizationCredentials, HTTPBearer
 from models.favorite import Favorite
 from models.stand import Stand as StandModel, CategoryModel
@@ -141,7 +141,7 @@ def put_stand(idstand: int, stand_update: StandUpdateRequest, db: Session = Depe
         stand.municipio = stand_update.municipio
         updated = True
     if stand_update.description is not None:
-        stand.description = stand_update.municipio
+        stand.description = stand_update.description
     if stand_update.estado is not None: 
         stand.estado = stand_update.estado
     if stand_update.horario is not None: 
@@ -607,3 +607,26 @@ def get_stand_by_user_id(search_term: str, db: Session = Depends(get_db)):
         return stands
     else:
         return False                 
+@stand_router.put("/protected/stand/images/{standid}", response_model=StandResponse)
+async def add_images_to_product(
+    standid: int, 
+    image: Optional[List[UploadFile]] = File(None), 
+    db: Session = Depends(get_db),
+    authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+):
+    stand_to_update= db.query(StandModel).filter(StandModel.idstand == standid).first()
+
+    if not stand_to_update:
+        raise HTTPException(status_code=404, detail="Product not found")
+    if image is not None:
+        new_image_urls = upload_images_to_s3(image, S3_BUCKET_NAME)
+        print(f"New image URLs: {new_image_urls}")
+        stand_to_update.image = stand_to_update.image + new_image_urls
+        print(stand_to_update.image)
+        db.commit()
+        db.refresh(stand_to_update)
+        return stand_to_update
+    else :
+        raise HTTPException(status_code=400, detail="No image provided")
+    
+    

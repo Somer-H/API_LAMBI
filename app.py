@@ -17,6 +17,7 @@ from routers.buyer import buyer_router
 from routers.products import product_router
 from routers.stand import stand_router
 from routers.sell import sell_router
+from routers.routes import auth_routes
 origins = [
     "http://localhost",
     "http://localhost:8000",
@@ -31,6 +32,7 @@ app.include_router(buyer_router, prefix="/api", tags=["users"])
 app.include_router(product_router, prefix="/api", tags=["products"])
 app.include_router(stand_router, prefix="/api", tags=["stand"])
 app.include_router(sell_router, prefix="/api", tags=["sell"])
+app.include_router(auth_routes, prefix="/api", tags=["loginOauth"])
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:4200"],
